@@ -1,0 +1,68 @@
+name: lava_peak_run
+description: "Lava Peak Run - Volcano Clicker Game"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  video_player: ^2.9.2
+  shared_preferences: ^2.3.3
+  webview_flutter: ^4.10.0
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.2.1
+  provider: ^6.1.2
+  audioplayers: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/Game_Name.png
+    - assets/Logo_white.webp
+    - assets/Assets/1_bg_asset.webp
+    - assets/Assets/1_volcano_asset.webp
+    - assets/Assets/2_bg_asset.webp
+    - assets/Assets/2_volcano_asset.webp
+    - assets/Assets/3_bg_asset.webp
+    - assets/Assets/3_volcano_asset.webp
+    - assets/Assets/4_bg_asset.webp
+    - assets/Assets/4_volcano_asset.webp
+    - assets/Assets/5_bg_asset.webp
+    - assets/Assets/5_volcano_asset.webp
+    - assets/Assets/6_bg_asset.webp
+    - assets/Assets/6_volcano_asset.webp
+    - assets/Assets/7_bg_asset.webp
+    - assets/Assets/7_volcano_asset.webp
+    - assets/Loading/Horizontal_Loading_Screen.mp4
+    - assets/Loading/Vertical_Loading_Screen.mp4
+    - assets/Loading/Loading_Bar_Empty.webp
+    - assets/Loading/Loading_Bar_Half.webp
+    - assets/Loading/Loading_Bar_Almost.webp
+    - assets/Loading/Loading_Bar_Full.webp
+    - assets/Notifications/Horizontal_Notifications_Screen.webp
+    - assets/Notifications/Vertical_Notifications_Screen.webp
+    - assets/Nowifi/Horizontal_Nowifi_Screen.webp
+    - assets/Nowifi/Vertical_Nowifi_Screen.webp
+    - assets/Sounds/tap.mp3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/Logo_white.webp"
+  adaptive_icon_background: "#1A0500"
+  adaptive_icon_foreground: "assets/Logo_white.webp"
+  web:
+    generate: false
