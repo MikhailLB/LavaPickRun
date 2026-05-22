@@ -16,7 +16,6 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		AA00000100000000000001AA /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000003AA /* NotificationService.swift */; };
-		AA00000100000000000002AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000004AA /* Info.plist */; };
 		AA00000100000000000010AA /* NotificationService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA00000100000000000005AA /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -291,7 +290,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA00000100000000000002AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
