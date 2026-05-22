@@ -7,7 +7,25 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>This app does not use the camera.</string>
+	<string>Lava Peak Run uses your camera to capture and share your volcano eruption moments and high-score achievements with the community.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We save your eruption screenshots and victory badges to your photo library so you can share your achievements.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use this identifier to personalise in-game events, tailor reward eruptions to your play style, and measure which of our campaigns bring the best players to the community.</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>tel</string>
+		<string>mailto</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Lava Peak Run</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -53,6 +71,11 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

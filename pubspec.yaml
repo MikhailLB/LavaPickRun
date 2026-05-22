@@ -11,6 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+
+  # White (game) layer
   video_player: ^2.9.2
   shared_preferences: ^2.3.3
   webview_flutter: ^4.10.0
@@ -19,14 +21,45 @@ dependencies:
   provider: ^6.1.2
   audioplayers: ^6.1.0
 
+  # Gray gate layer — attribution, push, WebView gate
+  appsflyer_sdk: ^6.16.2
+  app_tracking_transparency: 2.0.5
+  firebase_core: ^3.15.0
+  firebase_messaging: ^15.2.6
+  firebase_app_check: ^0.3.2+8
+  flutter_local_notifications: ^17.2.4
+  connectivity_plus: ^6.1.5
+  http: ^1.5.0
+  device_info_plus: ^11.5.0
+  flutter_secure_storage: ^9.2.4
+  package_info_plus: ^8.3.0
+  webview_flutter_android: ^4.3.4
+  webview_flutter_wkwebview: ^3.22.0
+  url_launcher: ^6.3.2
+  file_picker: ^10.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/Logo_white.webp"
+  adaptive_icon_background: "#1A0500"
+  adaptive_icon_foreground: "assets/Logo_white.webp"
+  web:
+    generate: false
+
 flutter:
   uses-material-design: true
+
+  # Disable SPM — Firebase managed via CocoaPods to avoid module redefinition.
+  config:
+    enable-swift-package-manager: false
 
   assets:
     - assets/Game_Name.png
@@ -56,13 +89,3 @@ flutter:
     - assets/Nowifi/Horizontal_Nowifi_Screen.webp
     - assets/Nowifi/Vertical_Nowifi_Screen.webp
     - assets/Sounds/tap.mp3
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/Logo_white.webp"
-  adaptive_icon_background: "#1A0500"
-  adaptive_icon_foreground: "assets/Logo_white.webp"
-  web:
-    generate: false
