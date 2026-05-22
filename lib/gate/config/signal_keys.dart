@@ -13,16 +13,12 @@ import '../../core/mask_util.dart';
 ///
 /// Run tool/encode_creds.dart to get byte arrays for your values.
 
-// TODO: replace with your encoded AppsFlyer dev key bytes
 String appsflyerDevKey() {
-  const v = <int>[];
-  if (v.isEmpty) return '';
+  const v = [248, 117, 128, 2, 198, 249, 82, 166, 238, 99, 132, 185, 162, 148, 253, 42, 224, 131, 153, 228, 94, 130];
   return unmask(v);
 }
 
-// TODO: replace with your encoded Firebase project number bytes
 String firebaseProjectNumber() {
-  const v = <int>[];
-  if (v.isEmpty) return '';
+  const v = [155, 11, 220, 93, 145, 142, 13, 255, 177, 0, 143, 182];
   return unmask(v);
 }

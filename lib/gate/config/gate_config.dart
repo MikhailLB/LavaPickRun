@@ -8,8 +8,7 @@ import 'brand_links.dart';
 /// ════════════════════════════════════════════════════════════
 abstract final class GateConfig {
   // ── iOS App Store numeric ID ──────────────────────────────
-  // TODO: replace with your App Store app ID (numeric string)
-  static const String iosStoreId = 'TODO_IOS_APP_STORE_ID';
+  static const String iosStoreId = '6771216641';
 
   // ── Android/iOS bundle / package ID ──────────────────────
   // Must match applicationId in build.gradle.kts and
