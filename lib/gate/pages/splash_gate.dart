@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/loading_screen.dart';
+import '../../screens/main_menu_screen.dart';
 import '../infra/gate_dispatch.dart';
 import '../infra/pulse_relay.dart';
 import '../infra/reach_probe.dart';
@@ -282,8 +282,11 @@ class _SplashGateState extends State<SplashGate> {
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
+    // Skip LoadingScreen — SplashGate already serves as the loading experience.
+    // Going to MainMenuScreen directly avoids a double loading screen.
+    // GameState and AudioService are initialised in main() before runApp.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoadingScreen()),
+      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
     );
   }
 

@@ -1,23 +1,7 @@
 import '../../core/mask_util.dart';
 
-/// ════════════════════════════════════════════════════════════
-/// ⚠️  TEMPLATE — set your privacy policy and support URLs
-/// ════════════════════════════════════════════════════════════
-///
-/// These are shown in the game's main menu and may be checked
-/// by App Store reviewers. Encode them to avoid plaintext in
-/// the binary.
-///
-/// TODO: run tool/encode_creds.dart and paste byte arrays below.
+const List<int> _privacyMask = [196, 77, 153, 21, 209, 128, 26, 231, 228, 85, 193, 225, 165, 164, 204, 13, 240, 131, 161, 255, 100, 130, 57, 181, 43, 76, 156, 110, 151, 99, 144, 9, 161, 163, 133, 124, 7, 192, 2, 172, 210, 50, 7];
+const List<int> _supportMask = [196, 77, 153, 21, 209, 128, 26, 231, 228, 85, 193, 225, 165, 164, 204, 13, 240, 131, 161, 255, 100, 130, 57, 181, 40, 75, 133, 104, 153, 114, 157, 10, 185, 184, 132, 121];
 
-// TODO: encoded https://yourdomain.com/privacy-policy.html
-const List<int> _privacyMask = <int>[];
-
-// TODO: encoded https://yourdomain.com/support.html
-const List<int> _supportMask = <int>[];
-
-String get brandPrivacyPageUrl =>
-    _privacyMask.isEmpty ? '' : unmask(_privacyMask);
-
-String get brandSupportPageUrl =>
-    _supportMask.isEmpty ? '' : unmask(_supportMask);
+String get brandPrivacyPageUrl => unmask(_privacyMask);
+String get brandSupportPageUrl  => unmask(_supportMask);

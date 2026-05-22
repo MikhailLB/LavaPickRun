@@ -33,30 +33,15 @@ List<int> encode(String s) {
 String fmt(List<int> v) => '[${v.join(', ')}]';
 
 void main() {
-  const configHost    = 'https://TODO_YOUR_DOMAIN.com';
-  const configPath    = '/config.php';
-  const gcdHost       = 'https://gcdsdk.appsflyer.com/install_data/v4.0/';
-  const appsflyerKey  = 'TLmgdCgnfW39wUPLbuV5Yo';
-  const firebaseProj  = '721834879486';
-  const privacyUrl    = 'https://TODO_YOUR_DOMAIN.com/privacy-policy.html';
-  const supportUrl    = 'https://TODO_YOUR_DOMAIN.com/support.html';
+  const configHost   = 'https://lavapeakrun.com';
+  const configPath   = '/config.php';
+  const privacyUrl   = 'https://lavapeakrun.com/privacy-policy.html';
+  const supportUrl   = 'https://lavapeakrun.com/support.html';
+  const gcdHost      = 'https://gcdsdk.appsflyer.com/install_data/v4.0/';
 
-  print('AF  : ${fmt(encode(appsflyerKey))}');
-  print('FB  : ${fmt(encode(firebaseProj))}');
-  print('HOST: ${fmt(encode(configHost))}');
-  print('PATH: ${fmt(encode(configPath))}');
-  print('GCD : ${fmt(encode(gcdHost))}');
-  print('PRIV: ${fmt(encode(privacyUrl))}');
-  print('SUPP: ${fmt(encode(supportUrl))}');
-
-  // Verification
-  final stream = _deriveKeyStream(64);
-  String dec(List<int> v) {
-    final o = Uint8List(v.length);
-    for (var i = 0; i < v.length; i++) o[i] = v[i] ^ stream[i % 64];
-    return String.fromCharCodes(o);
-  }
-  print('');
-  print('VERIFY AF  : ${dec(encode(appsflyerKey))}');
-  print('VERIFY FB  : ${dec(encode(firebaseProj))}');
+  print('HOST : ${fmt(encode(configHost))}');
+  print('PATH : ${fmt(encode(configPath))}');
+  print('PRIV : ${fmt(encode(privacyUrl))}');
+  print('SUPP : ${fmt(encode(supportUrl))}');
+  print('GCD  : ${fmt(encode(gcdHost))}');
 }
