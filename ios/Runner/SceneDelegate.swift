@@ -36,23 +36,45 @@ class SceneDelegate: FlutterSceneDelegate {
   }
 
   /// Checks every key the gray backend may use for the destination URL.
+  /// Priority order matches PulseRelay._extractUrl() on the Dart side so
+  /// killed-app and live-app paths resolve identically.
   static func extractUrl(from userInfo: [AnyHashable: Any]) -> String? {
     let keys = ["url", "link", "target", "deeplink", "deep_link"]
+
+    // Log the full userInfo to help debug URL mismatches between
+    // killed-app (SceneDelegate path) and live-app (Firebase path).
+    NSLog("[LPR.NATIVE] userInfo keys: %@", userInfo.keys.map { "\($0)" }.joined(separator: ", "))
+    for (k, v) in userInfo {
+      NSLog("[LPR.NATIVE] userInfo[\(k)] = \(v)")
+    }
 
     func scan(_ map: [AnyHashable: Any]) -> String? {
       for key in keys {
         if let raw = map[key] as? String,
            !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          NSLog("[LPR.NATIVE] found url via key '\(key)': %@", raw)
           return raw.trimmingCharacters(in: .whitespacesAndNewlines)
         }
       }
       return nil
     }
 
+    // 1. Direct top-level keys (FCM flattens data payload into userInfo)
     if let direct = scan(userInfo) { return direct }
-    if let nested = userInfo["payload"] as? [AnyHashable: Any] {
-      return scan(nested)
+
+    // 2. Nested "data" dict (some backends wrap payload in data:{})
+    if let nested = userInfo["data"] as? [AnyHashable: Any] {
+      NSLog("[LPR.NATIVE] scanning nested 'data' dict")
+      if let url = scan(nested) { return url }
     }
+
+    // 3. Nested "payload" dict
+    if let nested = userInfo["payload"] as? [AnyHashable: Any] {
+      NSLog("[LPR.NATIVE] scanning nested 'payload' dict")
+      if let url = scan(nested) { return url }
+    }
+
+    NSLog("[LPR.NATIVE] no url found in userInfo")
     return nil
   }
 

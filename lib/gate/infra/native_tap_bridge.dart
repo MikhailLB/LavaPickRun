@@ -26,7 +26,7 @@ class NativeTapBridge {
         return null;
       }
       await prefs.remove(_key);
-      debugPrint('[LPR.NATIVE] consumeTapUrl -> $raw');
+      debugPrint('[LPR.NATIVE] consumeTapUrl -> "$raw"');
       return raw.trim();
     } catch (err) {
       debugPrint('[LPR.NATIVE] consumeTapUrl failed: $err');
