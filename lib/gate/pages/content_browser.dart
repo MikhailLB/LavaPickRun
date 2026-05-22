@@ -127,6 +127,22 @@ class _ContentBrowserState extends State<ContentBrowser>
         _injectSafeArea();
         _injectKeyboardFix();
         _injectAntiZoom();
+        // On cold-start (app killed → push tap), the WKWebView renders before
+        // SystemUiMode.immersiveSticky has settled. The viewport dimensions
+        // are calculated while the status bar / home indicator are still
+        // visible, making the page look stretched. Dispatching a synthetic
+        // resize event ~800ms later forces the site to recalculate its layout
+        // after immersive mode is fully applied — same effect as rotating the
+        // device but without user intervention.
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (!mounted) return;
+          _wv.runJavaScript(
+            'window.dispatchEvent(new Event("resize"));'
+            'if(window.visualViewport)'
+            '  window.visualViewport.dispatchEvent(new Event("resize"));',
+          );
+          _injectSafeArea();
+        });
         if (!_firstPaintFired) {
           _firstPaintFired = true;
           Future.delayed(const Duration(milliseconds: 600), () {
