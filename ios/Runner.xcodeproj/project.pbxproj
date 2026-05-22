@@ -15,6 +15,9 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		AA00000100000000000001AA /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000003AA /* NotificationService.swift */; };
+		AA00000100000000000002AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000004AA /* Info.plist */; };
+		AA00000100000000000010AA /* NotificationService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA00000100000000000005AA /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,6 +27,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		AA00000100000000000012AA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA00000100000000000007AA;
+			remoteInfo = NotificationService;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -36,6 +46,17 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000010000000000000FAA /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA00000100000000000010AA /* NotificationService.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -57,10 +78,20 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA00000100000000000003AA /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		AA00000100000000000004AA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA00000100000000000005AA /* NotificationService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000010000000000000AAA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -94,6 +125,7 @@
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
+				AA00000100000000000006AA /* NotificationService */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 			);
@@ -104,6 +136,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				AA00000100000000000005AA /* NotificationService.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -122,6 +155,15 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		AA00000100000000000006AA /* NotificationService */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000100000000000003AA /* NotificationService.swift */,
+				AA00000100000000000004AA /* Info.plist */,
+			);
+			path = NotificationService;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -154,15 +196,34 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				AA0000010000000000000FAA /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA00000100000000000011AA /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AA00000100000000000007AA /* NotificationService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000010000000000000EAA /* Build configuration list for PBXNativeTarget "NotificationService" */;
+			buildPhases = (
+				AA00000100000000000008AA /* Sources */,
+				AA0000010000000000000AAA /* Frameworks */,
+				AA00000100000000000009AA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NotificationService;
+			productName = NotificationService;
+			productReference = AA00000100000000000005AA /* NotificationService.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -182,6 +243,9 @@
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
 					};
+					AA00000100000000000007AA = {
+						CreatedOnToolsVersion = 15.0;
+					};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -199,6 +263,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				AA00000100000000000007AA /* NotificationService */,
 			);
 		};
 /* End PBXProject section */
@@ -219,6 +284,14 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000100000000000009AA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000100000000000002AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,6 +350,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA00000100000000000008AA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000100000000000001AA /* NotificationService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -284,6 +365,11 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		AA00000100000000000011AA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA00000100000000000007AA /* NotificationService */;
+			targetProxy = AA00000100000000000012AA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -584,6 +670,64 @@
 			};
 			name = Release;
 		};
+		AA0000010000000000000BAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 278588XQD2;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lavaplay.lava.peak.run.NotificationService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0000010000000000000CAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 278588XQD2;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lavaplay.lava.peak.run.NotificationService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AA0000010000000000000DAA /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 278588XQD2;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lavaplay.lava.peak.run.NotificationService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -613,6 +757,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000010000000000000EAA /* Build configuration list for PBXNativeTarget "NotificationService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000010000000000000BAA /* Debug */,
+				AA0000010000000000000CAA /* Release */,
+				AA0000010000000000000DAA /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
