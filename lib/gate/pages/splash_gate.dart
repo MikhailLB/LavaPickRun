@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../screens/main_menu_screen.dart';
 import '../infra/gate_dispatch.dart';
+import '../infra/native_tap_bridge.dart';
 import '../infra/pulse_relay.dart';
 import '../infra/reach_probe.dart';
 import '../infra/session_vault.dart';
@@ -94,6 +95,26 @@ class _SplashGateState extends State<SplashGate> {
   Future<void> _boot() async {
     widget.pulse.onTokenRefresh = _onTokenRefresh;
 
+    // ── HIGHEST PRIORITY: SceneDelegate cold-start URL ─────────────────
+    // When the app is KILLED and the user taps a push notification, iOS
+    // delivers the tap through SceneDelegate.scene(_:willConnectTo:options:)
+    // BEFORE any Dart code runs. Firebase's getInitialMessage() does NOT
+    // receive this tap on scene-based apps (flutterfire#8896). SceneDelegate
+    // writes the URL to UserDefaults under flutter.lpr_gate_tap_url.
+    // We read and clear it HERE — before push bootstrap, before network check,
+    // before attribution — so the URL is NEVER lost to a timeout race.
+    final nativeColdUrl = await NativeTapBridge.consumeTapUrl();
+    if (nativeColdUrl != null && nativeColdUrl.isNotEmpty) {
+      debugPrint('[LPR.SG] native cold-start url → $nativeColdUrl');
+      await widget.vault.writeMode(SessionMode.web);
+      // Clear one-shot stash so the Firebase path doesn't double-navigate
+      await widget.vault.consumeOneShotUrl();
+      // Fire attribution in background — never block the user
+      unawaited(_dispatchBackground());
+      _goContent(nativeColdUrl);
+      return;
+    }
+
     _setBar(_BarStep.empty);
     final mode = widget.vault.readMode();
 
@@ -124,6 +145,27 @@ class _SplashGateState extends State<SplashGate> {
     widget.pulse.onTokenRefresh = null;
     _vid?.dispose();
     super.dispose();
+  }
+
+  /// Best-effort attribution ping after cold-start express lane.
+  Future<void> _dispatchBackground() async {
+    try {
+      await Future.wait([
+        widget.pulse.bootstrap().catchError((_) {}),
+        widget.signal.warmup().catchError((_) {}),
+      ]);
+      await Future.wait([
+        widget.signal.awaitConversion(timeout: const Duration(seconds: 6)),
+        widget.signal.awaitDeepLink(),
+      ]);
+      final body = await widget.signal.buildPayload(
+        locale: Platform.localeName.replaceAll('-', '_'),
+        pushToken: widget.pulse.token,
+      );
+      await widget.dispatch.send(body);
+    } catch (e) {
+      debugPrint('[LPR.SG] background dispatch error: $e');
+    }
   }
 
   void _onTokenRefresh(String token) async {
