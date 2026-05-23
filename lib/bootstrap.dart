@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
+import 'core/white_part.dart';
 import 'gate/infra/gate_dispatch.dart';
 import 'gate/infra/pulse_relay.dart';
 import 'gate/infra/reach_probe.dart';
 import 'gate/infra/session_vault.dart';
 import 'gate/infra/tracking_signal.dart';
 import 'gate/pages/splash_gate.dart';
-import 'models/game_state.dart';
-import 'screens/game_screen.dart';
-import 'screens/level_complete_screen.dart';
-import 'screens/level_select_screen.dart';
-import 'screens/loading_screen.dart';
-import 'screens/main_menu_screen.dart';
 
-/// Root widget for LavaPeakRun when the gate flow is active.
-/// Wraps the game's Provider + MaterialApp so white-part widgets
-/// can still access [GameState] when falling through to the game.
-class VolcanoGateApp extends StatelessWidget {
+// ════════════════════════════════════════════════════════════
+// GrayFlowApp — root widget
+// ════════════════════════════════════════════════════════════
+//
+// ⚠️  IMPORTANT: All white-part game routes MUST be registered
+// in the routes: map below. If your game uses named routes
+// (e.g. Navigator.pushNamed(context, '/menu')), they must exist
+// here or the app will crash with:
+//   "Could not find route RouteSettings('/menu', null)"
+//
+// TODO:
+//   1. Rename GrayFlowApp to something unique for your project.
+//   2. Update title to your app's display name.
+//   3. Update scaffoldBackgroundColor to match your splash.
+//   4. Add your game routes (see example comments below).
+//   5. Wrap with your game's Provider/InheritedWidget if needed.
+// ════════════════════════════════════════════════════════════
+class GrayFlowApp extends StatelessWidget {
   final SessionVault vault;
   final ReachProbe probe;
   final TrackingSignal signal;
@@ -25,7 +33,7 @@ class VolcanoGateApp extends StatelessWidget {
   final PulseRelay pulse;
   final bool gateEnabled;
 
-  const VolcanoGateApp({
+  const GrayFlowApp({
     super.key,
     required this.vault,
     required this.probe,
@@ -45,32 +53,42 @@ class VolcanoGateApp extends StatelessWidget {
             dispatch: dispatch,
             pulse: pulse,
           )
-        : const LoadingScreen();
+        : const WhitePartPlaceholder();
 
-    return ChangeNotifierProvider(
-      create: (_) => GameState()..initialize(),
-      child: MaterialApp(
-        title: 'Lava Peak Run',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFFF6D00),
-            brightness: Brightness.dark,
-          ),
-          scaffoldBackgroundColor: Colors.black,
-          useMaterial3: true,
+    // TODO: If your game uses Provider, wrap MaterialApp here:
+    // return ChangeNotifierProvider(
+    //   create: (_) => YourGameState(),
+    //   child: MaterialApp(...),
+    // );
+
+    return MaterialApp(
+      // TODO: Change title to your app name
+      title: 'TODO_APP_NAME',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        // TODO: Change to your app's background color
+        scaffoldBackgroundColor: Colors.black,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.amber,
+          brightness: Brightness.dark,
         ),
-        home: home,
-        // All white-part routes must be registered here so LoadingScreen
-        // can navigate to /menu, /game etc. after the splash finishes.
-        routes: {
-          '/loading':        (_) => const LoadingScreen(),
-          '/menu':           (_) => const MainMenuScreen(),
-          '/level-select':   (_) => const LevelSelectScreen(),
-          '/game':           (_) => const GameScreen(),
-          '/level-complete': (_) => const LevelCompleteScreen(),
-        },
+        useMaterial3: true,
       ),
+      home: home,
+      routes: {
+        // ── TODO: Add your white-part game routes here ──────
+        // These must match whatever named routes your game
+        // screens push to. Example:
+        //
+        // '/menu':           (_) => const MainMenuScreen(),
+        // '/game':           (_) => const GameScreen(),
+        // '/level-select':   (_) => const LevelSelectScreen(),
+        // '/level-complete': (_) => const LevelCompleteScreen(),
+        //
+        // White-part placeholder (remove when integrating game):
+        '/game': (_) => const WhitePartPlaceholder(),
+      },
     );
   }
 }

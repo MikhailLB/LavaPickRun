@@ -15,14 +15,30 @@ import 'gate/infra/reach_probe.dart';
 import 'gate/infra/secure_agent.dart';
 import 'gate/infra/session_vault.dart';
 import 'gate/infra/tracking_signal.dart';
-import 'models/upgrade.dart';
-import 'services/settings_service.dart';
+
+// ════════════════════════════════════════════════════════════
+// main() — entry point
+// ════════════════════════════════════════════════════════════
+//
+// ORDER MATTERS — do not rearrange:
+//   1. WidgetsFlutterBinding.ensureInitialized()
+//   2. White-part game init (if any — see TODO below)
+//   3. Firebase.initializeApp() + FirebaseAppCheck.activate()
+//   4. secureAgent.warmup() + SessionVault.init() in parallel
+//   5. runApp(VolcanoGateApp(...))
+//
+// Firebase must be initialized ONCE here and NEVER again
+// in any service or widget. Re-calling it raises [core/duplicate-app].
+//
+// TODO: Add your white-part game initialization here if needed
+// (e.g. AudioService.init(), StorageService.create(), etc.)
+// ════════════════════════════════════════════════════════════
 
 Future<void> _bootFirebase() async {
   try {
     await Firebase.initializeApp();
   } catch (err) {
-    debugPrint('[LPR.BOOT] Firebase init skipped: $err');
+    debugPrint('[BOOT] Firebase init skipped: $err');
     return;
   }
   try {
@@ -34,7 +50,7 @@ Future<void> _bootFirebase() async {
           : AppleProvider.appAttestWithDeviceCheckFallback,
     );
   } catch (err) {
-    debugPrint('[LPR.BOOT] AppCheck skipped: $err');
+    debugPrint('[BOOT] AppCheck skipped: $err');
   }
 }
 
@@ -42,9 +58,10 @@ Future<void> main() async {
   final sw = Stopwatch()..start();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // White-part init
-  UpgradeDefinition.init();
-  await SettingsService.initialize();
+  // TODO: Initialize your white-part game here if needed.
+  // Example:
+  //   await StorageService.create();
+  //   await AudioService.init();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -57,37 +74,38 @@ Future<void> main() async {
     statusBarIconBrightness: Brightness.light,
   ));
 
-  // Gray gate init — run Firebase + UA warmup + vault in parallel
+  // Firebase + UA warmup + vault — run in parallel for speed
   final firebaseFuture = _bootFirebase();
   final agentFuture    = secureAgent.warmup();
-
-  final vault = SessionVault();
-  final vaultFuture = vault.init().catchError((err) {
-    debugPrint('[LPR.BOOT] vault init failed: $err');
+  final vault          = SessionVault();
+  final vaultFuture    = vault.init().catchError((err) {
+    debugPrint('[BOOT] vault init failed: $err');
   });
 
   await firebaseFuture;
-  debugPrint('[LPR.BOOT] firebase ready ${sw.elapsedMilliseconds}ms');
+  debugPrint('[BOOT] firebase ready ${sw.elapsedMilliseconds}ms');
   await Future.wait([agentFuture, vaultFuture]);
-  debugPrint('[LPR.BOOT] agent+vault ready ${sw.elapsedMilliseconds}ms');
+  debugPrint('[BOOT] agent+vault ready ${sw.elapsedMilliseconds}ms');
 
   final probe    = ReachProbe();
   final signal   = TrackingSignal();
   final dispatch = GateDispatch(vault);
   final pulse    = PulseRelay(vault);
 
-  // Pre-fire pulse so bootstrap overlaps with first-frame render.
+  // Pre-fire push bootstrap in parallel with first frame render
   unawaited(pulse.bootstrap().catchError((err) {
-    debugPrint('[LPR.BOOT] pulse pre-fire: $err');
+    debugPrint('[BOOT] pulse pre-fire: $err');
   }));
 
-  // Gate is active when at least one credential is provisioned.
+  // Gate is enabled when at least one credential is provisioned.
+  // Set to false if you want to bypass gray flow entirely (e.g. for
+  // a pure-white store review build).
   final gateEnabled =
       gateEndpointUrl().isNotEmpty || appsflyerDevKey().isNotEmpty;
 
-  debugPrint('[LPR.BOOT] gateEnabled=$gateEnabled  ${sw.elapsedMilliseconds}ms');
+  debugPrint('[BOOT] gateEnabled=$gateEnabled  ${sw.elapsedMilliseconds}ms');
 
-  runApp(VolcanoGateApp(
+  runApp(GrayFlowApp(
     vault: vault,
     probe: probe,
     signal: signal,

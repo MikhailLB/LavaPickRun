@@ -1,5 +1,5 @@
-name: lava_peak_run
-description: "Lava Peak Run - Volcano Clicker Game"
+name: gray_flow_template
+description: "Gray flow iOS template — replace name and description for your app"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -12,16 +12,14 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-  # White (game) layer
+  # ── Loading screen video (keep — used by SplashGate) ──────
   video_player: ^2.9.2
-  shared_preferences: ^2.3.3
-  webview_flutter: ^4.10.0
-  flutter_animate: ^4.5.0
-  google_fonts: ^6.2.1
-  provider: ^6.1.2
-  audioplayers: ^6.1.0
 
-  # Gray gate layer — attribution, push, WebView gate
+  # ── Gray gate layer ───────────────────────────────────────
+  # TODO: before building, change every version number below
+  # to something different from every other project in your
+  # portfolio. Minor bumps are fine (e.g. ^6.16.2 → ^6.16.3).
+  # This prevents binary fingerprinting across apps.
   appsflyer_sdk: ^6.16.2
   app_tracking_transparency: 2.0.5
   firebase_core: ^3.15.0
@@ -33,10 +31,12 @@ dependencies:
   device_info_plus: ^11.5.0
   flutter_secure_storage: ^9.2.4
   package_info_plus: ^8.3.0
+  webview_flutter: ^4.10.0
   webview_flutter_android: ^4.3.4
   webview_flutter_wkwebview: ^3.22.0
   url_launcher: ^6.3.2
   file_picker: ^10.3.4
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +48,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
+  # TODO: replace with your app icon path
   image_path: "assets/Logo_white.webp"
   adaptive_icon_background: "#1A0500"
   adaptive_icon_foreground: "assets/Logo_white.webp"
@@ -57,27 +58,13 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
 
-  # Disable SPM — Firebase managed via CocoaPods to avoid module redefinition.
+  # Disable SPM — Firebase managed via CocoaPods to prevent module conflicts.
   config:
     enable-swift-package-manager: false
 
   assets:
-    - assets/Game_Name.png
+    # Gray flow splash/loading screen assets — keep these
     - assets/Logo_white.webp
-    - assets/Assets/1_bg_asset.webp
-    - assets/Assets/1_volcano_asset.webp
-    - assets/Assets/2_bg_asset.webp
-    - assets/Assets/2_volcano_asset.webp
-    - assets/Assets/3_bg_asset.webp
-    - assets/Assets/3_volcano_asset.webp
-    - assets/Assets/4_bg_asset.webp
-    - assets/Assets/4_volcano_asset.webp
-    - assets/Assets/5_bg_asset.webp
-    - assets/Assets/5_volcano_asset.webp
-    - assets/Assets/6_bg_asset.webp
-    - assets/Assets/6_volcano_asset.webp
-    - assets/Assets/7_bg_asset.webp
-    - assets/Assets/7_volcano_asset.webp
     - assets/Loading/Horizontal_Loading_Screen.mp4
     - assets/Loading/Vertical_Loading_Screen.mp4
     - assets/Loading/Loading_Bar_Empty.webp
@@ -88,4 +75,5 @@ flutter:
     - assets/Notifications/Vertical_Notifications_Screen.webp
     - assets/Nowifi/Horizontal_Nowifi_Screen.webp
     - assets/Nowifi/Vertical_Nowifi_Screen.webp
-    - assets/Sounds/tap.mp3
+    # TODO: add your white-part game assets below
+    # - assets/your_game_assets/

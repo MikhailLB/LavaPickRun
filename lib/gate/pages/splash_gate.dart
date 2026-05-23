@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/main_menu_screen.dart';
+import '../../core/white_part.dart';
 import '../infra/gate_dispatch.dart';
 import '../infra/native_tap_bridge.dart';
 import '../infra/pulse_relay.dart';
@@ -321,14 +321,16 @@ class _SplashGateState extends State<SplashGate> {
     ));
   }
 
+  // ── WHITE PART INTEGRATION POINT ──────────────────────────
+  // Called when gate decides user should see the game (organic).
+  // TODO: Replace WhitePartPlaceholder with your game's main
+  // screen. Do NOT navigate to a LoadingScreen — SplashGate
+  // already serves as the loading experience.
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
-    // Skip LoadingScreen — SplashGate already serves as the loading experience.
-    // Going to MainMenuScreen directly avoids a double loading screen.
-    // GameState and AudioService are initialised in main() before runApp.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+      MaterialPageRoute(builder: (_) => const WhitePartPlaceholder()),
     );
   }
 
