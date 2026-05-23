@@ -757,6 +757,72 @@ cd android; .\gradlew.bat --stop; cd ..; flutter clean; flutter pub get
 - `firebase_messaging` requires minSdk ≥ 21
 - `coreLibraryDesugaring` needed for Java 8 APIs on older Android versions
 
+### `pod install` fails — `project.pbxproj` corruption after Windows edits
+
+When `project.pbxproj` is edited on Windows (e.g. by an AI agent or script) and then used for `pod install` on macOS, three separate corruption issues can appear in sequence:
+
+#### Error 1: `Nanaimo::Reader::ParseError — Array missing ',' in between objects`
+
+**Cause:** Full `PBXFileReference` object definitions (e.g. `UUID = {isa = PBXFileReference; ...};`) were accidentally placed inside a `PBXGroup`'s `children` array. The children array must only contain UUID references (`UUID /* name */,`), not full object definitions.
+
+**Example of broken pbxproj:**
+```
+children = (
+    97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
+    BB200001000000000000006A /* NotificationService.swift */ = {isa = PBXFileReference; ...};  ← WRONG
+    BB200001000000000000009A /* GoogleService-Info.plist */ = {isa = PBXFileReference; ...};  ← WRONG
+);
+```
+
+**Fix:** Remove the full `= {isa = PBXFileReference; ...}` definitions from the `children` array. Keep only the UUID references. The full definitions belong exclusively in the `/* Begin PBXFileReference section */` block.
+
+---
+
+#### Error 2: `Nanaimo::Reader::ParseError — Invalid character "\\" in unquoted string`
+
+**Cause:** The file contains literal two-character sequences `\t` (backslash + t) instead of real tab characters. This happens when a Windows script writes escaped `\t` strings to the file instead of actual tab bytes.
+
+**Fix (PowerShell):**
+```powershell
+$path = "ios/Runner.xcodeproj/project.pbxproj"
+$content = [System.IO.File]::ReadAllText($path)
+$fixed = $content.Replace('\t', "`t")
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($path, $fixed, $utf8NoBom)
+```
+
+⚠️ **Critical:** Always use `New-Object System.Text.UTF8Encoding $false` (no BOM) when writing `project.pbxproj`. Using `[System.Text.Encoding]::UTF8` adds a UTF-8 BOM which causes Error 3 below.
+
+---
+
+#### Error 3: `Nanaimo::Reader::ParseError — Invalid character "\xEF" in unquoted string` (line 1)
+
+**Cause:** The file was saved with a UTF-8 BOM (`EF BB BF`) at the very beginning. CocoaPods / Xcode require `project.pbxproj` to start with exactly `// !$*UTF8*$!` — no BOM. The `\xEF` byte is the first byte of the UTF-8 BOM.
+
+**Fix (PowerShell) — remove BOM and restore first line:**
+```powershell
+$path = "ios/Runner.xcodeproj/project.pbxproj"
+$bytes = [System.IO.File]::ReadAllBytes($path)
+
+# Remove BOM (EF BB BF) if present
+if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    $bytes = $bytes[3..($bytes.Length - 1)]
+}
+
+# Restore first line if corrupted (must start with '//' = 0x2F 0x2F)
+if ($bytes[0] -eq 0x2F -and $bytes[1] -ne 0x2F) {
+    $bytes = [byte[]]@(0x2F) + $bytes  # prepend missing '/'
+}
+
+[System.IO.File]::WriteAllBytes($path, $bytes)
+```
+
+**Verify:** First line must be exactly `// !$*UTF8*$!` and first bytes must be `0x2F 0x2F 0x20 0x21`.
+
+---
+
+**Root cause summary:** All three errors stem from editing `project.pbxproj` with Windows tools that either misplace content, escape tabs as `\t`, or add a UTF-8 BOM. The three errors always appear in sequence — fix them one by one or apply all fixes at once before running `pod install`.
+
 ---
 
 ## Merging Gray into White (Step-by-Step)
