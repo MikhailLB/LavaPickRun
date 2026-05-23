@@ -825,6 +825,50 @@ if ($bytes[0] -eq 0x2F -and $bytes[1] -ne 0x2F) {
 
 ---
 
+### Xcode build error: `Multiple commands produce '.../.appex'`
+
+**Symptom:** Xcode build fails with:
+```
+Multiple commands produce '/path/to/DerivedData/.../NotificationService.appex'
+```
+
+**Cause:** The `Runner` target in `project.pbxproj` has **two `dependencies` blocks** — an empty one (original) and a second one (with the NSE dependency, added when wiring the NSE). In a plist dictionary, duplicate keys are undefined. Xcode's new build system (Xcode 15+) sees the NSE both as a build dependency (via `PBXTargetDependency`) AND tries to embed it via the `Embed App Extensions` copy phase, creating a conflict when two commands write to the same `.appex` output path.
+
+**Broken pbxproj — Runner target with duplicate `dependencies`:**
+```
+97C146ED1CF9000F007C117D /* Runner */ = {
+    isa = PBXNativeTarget;
+    buildPhases = ( ... );
+    buildRules = ();
+    dependencies = ();          ← empty original block
+    name = Runner;
+    ...
+    dependencies = (            ← duplicate with NSE entry
+        BB20000100000000000000EA /* PBXTargetDependency */,
+    );
+};
+```
+
+**Fix:** Merge both `dependencies` blocks into one, keeping the NSE entry:
+```
+97C146ED1CF9000F007C117D /* Runner */ = {
+    isa = PBXNativeTarget;
+    buildPhases = ( ... );
+    buildRules = ();
+    dependencies = (
+        BB20000100000000000000EA /* PBXTargetDependency */,
+    );
+    name = Runner;
+    productName = Runner;
+    productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
+    productType = "com.apple.product-type.application";
+};
+```
+
+⚠️ There must be exactly **one** `dependencies` key in the Runner `PBXNativeTarget` dictionary.
+
+---
+
 ## Merging Gray into White (Step-by-Step)
 
 Starting from `ios-gray-template` branch:
