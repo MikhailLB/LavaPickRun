@@ -33,93 +33,98 @@ class MainMenuScreen extends StatelessWidget {
           ),
           // Content
           SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Settings gear top-right
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8, right: 12),
-                    child: _SettingsButton(),
-                  ),
-                ),
-                const Spacer(flex: 1),
-                // Game name logo
-                Image.asset(
-                  'assets/Game_Name.png',
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  fit: BoxFit.contain,
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scale(
-                      begin: const Offset(1.0, 1.0),
-                      end: const Offset(1.04, 1.04),
-                      duration: 2000.ms,
-                      curve: Curves.easeInOut,
-                    )
-                    .shimmer(
-                      duration: 3000.ms,
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.3),
-                    ),
-                const Spacer(flex: 1),
-                // Buttons
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _LavaButton(
-                        label: 'PLAY',
-                        icon: Icons.local_fire_department,
-                        onTap: () =>
-                            Navigator.of(context).pushNamed('/level-select'),
-                        isPrimary: true,
+                      // Settings gear top-right
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, right: 12),
+                          child: _SettingsButton(),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _LavaButton(
-                              label: 'Privacy',
-                              icon: Icons.privacy_tip_outlined,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const WebViewScreen(
-                                    url:
-                                        'https://lavapeakrun.com/privacy-policy.html',
-                                    title: 'Privacy Policy',
+                      // Game name logo
+                      Image.asset(
+                        'assets/Game_Name.png',
+                        width: MediaQuery.of(context).size.width * 0.85,
+                        fit: BoxFit.contain,
+                      )
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scale(
+                            begin: const Offset(1.0, 1.0),
+                            end: const Offset(1.04, 1.04),
+                            duration: 2000.ms,
+                            curve: Curves.easeInOut,
+                          )
+                          .shimmer(
+                            duration: 3000.ms,
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                          ),
+                      // Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          children: [
+                            _LavaButton(
+                              label: 'PLAY',
+                              icon: Icons.local_fire_department,
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed('/level-select'),
+                              isPrimary: true,
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _LavaButton(
+                                    label: 'Privacy',
+                                    icon: Icons.privacy_tip_outlined,
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const WebViewScreen(
+                                          url:
+                                              'https://lavapeakrun.com/privacy-policy.html',
+                                          title: 'Privacy Policy',
+                                        ),
+                                      ),
+                                    ),
+                                    isPrimary: false,
+                                    small: true,
                                   ),
                                 ),
-                              ),
-                              isPrimary: false,
-                              small: true,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _LavaButton(
-                              label: 'Support',
-                              icon: Icons.support_agent_outlined,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const WebViewScreen(
-                                    url:
-                                        'https://lavapeakrun.com/support.html',
-                                    title: 'Support',
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _LavaButton(
+                                    label: 'Support',
+                                    icon: Icons.support_agent_outlined,
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const WebViewScreen(
+                                          url:
+                                              'https://lavapeakrun.com/support.html',
+                                          title: 'Support',
+                                        ),
+                                      ),
+                                    ),
+                                    isPrimary: false,
+                                    small: true,
                                   ),
                                 ),
-                              ),
-                              isPrimary: false,
-                              small: true,
+                              ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Spacer(flex: 1),
-              ],
+              ),
             ),
           ),
         ],
