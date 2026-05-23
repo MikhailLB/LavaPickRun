@@ -1,11 +1,11 @@
-# Gray Flow — Living Integration Guide
+﻿# Gray Flow тАФ Living Integration Guide
 ## For AI agents working on this project
 
 ---
 
 ## What Is This Project?
 
-This is a Flutter app template that implements a **"gray flow"** — a dual-mode mobile app:
+This is a Flutter app template that implements a **"gray flow"** тАФ a dual-mode mobile app:
 
 - **Gray mode (online):** Shows a WebView with URL provided by a remote backend. The app acts as a content shell.
 - **White mode (offline):** Shows an offline game (fallback when the backend returns no URL).
@@ -20,47 +20,47 @@ The backend decides which users see the WebView based on attribution data (AppsF
 
 ```
 lib/
-├── main.dart               Entry point: Firebase, HttpAgent, services, runApp
-├── bootstrap.dart          Root widget (StreetSurgeApp) — TODO: rename per project
-├── cfg/                    ⚠️ ALL CREDENTIALS LIVE HERE
-│   ├── app_config.dart     Bundle ID, App Store ID, app name
-│   ├── network_cfg.dart    Encoded config endpoint URL
-│   ├── tracker_data.dart   Encoded AppsFlyer key + Firebase project number
-│   └── remote_paths.dart   Privacy policy + support URLs
-├── pages/
-│   ├── launch_page.dart    ★ CORE: splash video + routing logic
-│   ├── notify_page.dart    Push permission promo screen (with video)
-│   ├── web_view_page.dart  WebView + keyboard/safe-area JS injections
-│   └── no_signal_page.dart No internet error screen with retry
-├── infra/
-│   ├── api_client.dart     POST to config endpoint, cache URL
-│   ├── analytics_tracker.dart  AppsFlyer SDK init + attribution waiting
-│   ├── cold_start_bridge.dart  iOS: read push URL written by SceneDelegate
-│   ├── data_store.dart     SharedPreferences + SecureStorage wrapper
-│   ├── http_agent.dart     HTTP client with real device User-Agent
-│   ├── net_checker.dart    Internet connectivity check (DNS probe)
-│   └── push_manager.dart   Firebase FCM + flutter_local_notifications
-├── data/
-│   ├── api_result.dart     API response model {ok, url, expires, message}
-│   └── app_state.dart      online / offline / pending enum
-├── helpers/
-│   └── cipher.dart         ⚠️ XOR cipher — change seed per app
-└── core/
-    └── white_part.dart     ⚠️ TODO: replace with actual game widget
+тФЬтФАтФА main.dart               Entry point: Firebase, HttpAgent, services, runApp
+тФЬтФАтФА bootstrap.dart          Root widget (StreetSurgeApp) тАФ TODO: rename per project
+тФЬтФАтФА cfg/                    тЪая╕П ALL CREDENTIALS LIVE HERE
+тФВ   тФЬтФАтФА app_config.dart     Bundle ID, App Store ID, app name
+тФВ   тФЬтФАтФА network_cfg.dart    Encoded config endpoint URL
+тФВ   тФЬтФАтФА tracker_data.dart   Encoded AppsFlyer key + Firebase project number
+тФВ   тФФтФАтФА remote_paths.dart   Privacy policy + support URLs
+тФЬтФАтФА pages/
+тФВ   тФЬтФАтФА launch_page.dart    тШЕ CORE: splash video + routing logic
+тФВ   тФЬтФАтФА notify_page.dart    Push permission promo screen (with video)
+тФВ   тФЬтФАтФА web_view_page.dart  WebView + keyboard/safe-area JS injections
+тФВ   тФФтФАтФА no_signal_page.dart No internet error screen with retry
+тФЬтФАтФА infra/
+тФВ   тФЬтФАтФА api_client.dart     POST to config endpoint, cache URL
+тФВ   тФЬтФАтФА analytics_tracker.dart  AppsFlyer SDK init + attribution waiting
+тФВ   тФЬтФАтФА cold_start_bridge.dart  iOS: read push URL written by SceneDelegate
+тФВ   тФЬтФАтФА data_store.dart     SharedPreferences + SecureStorage wrapper
+тФВ   тФЬтФАтФА http_agent.dart     HTTP client with real device User-Agent
+тФВ   тФЬтФАтФА net_checker.dart    Internet connectivity check (DNS probe)
+тФВ   тФФтФАтФА push_manager.dart   Firebase FCM + flutter_local_notifications
+тФЬтФАтФА data/
+тФВ   тФЬтФАтФА api_result.dart     API response model {ok, url, expires, message}
+тФВ   тФФтФАтФА app_state.dart      online / offline / pending enum
+тФЬтФАтФА helpers/
+тФВ   тФФтФАтФА cipher.dart         тЪая╕П XOR cipher тАФ change seed per app
+тФФтФАтФА core/
+    тФФтФАтФА white_part.dart     тЪая╕П TODO: replace with actual game widget
 
 tool/
-└── encode_keys.dart        Run with `dart run tool/encode_keys.dart` to encode secrets
+тФФтФАтФА encode_keys.dart        Run with `dart run tool/encode_keys.dart` to encode secrets
 
 ios/Runner/
-├── SceneDelegate.swift     Captures push URLs on cold start
-└── Info.plist              ⚠️ Multiple keys required — see iOS section below
+тФЬтФАтФА SceneDelegate.swift     Captures push URLs on cold start
+тФФтФАтФА Info.plist              тЪая╕П Multiple keys required тАФ see iOS section below
 ```
 
 ---
 
 ## Setup Checklist (for a new project)
 
-### Step 1 — Credentials in `lib/cfg/`
+### Step 1 тАФ Credentials in `lib/cfg/`
 
 | File | What to change |
 |------|---------------|
@@ -68,9 +68,9 @@ ios/Runner/
 | `network_cfg.dart` | Byte arrays for config endpoint URL |
 | `tracker_data.dart` | Byte arrays for AppsFlyer key, Firebase project number, GCD URL |
 | `remote_paths.dart` | Privacy policy and support page URLs |
-| `helpers/cipher.dart` | `seedBytes` — unique per app, drives all encoding |
+| `helpers/cipher.dart` | `seedBytes` тАФ unique per app, drives all encoding |
 
-### Step 2 — Encode secrets
+### Step 2 тАФ Encode secrets
 
 ```bash
 dart run tool/encode_keys.dart
@@ -78,15 +78,15 @@ dart run tool/encode_keys.dart
 
 Fill in your values at the top of `tool/encode_keys.dart`, run it, copy the printed byte arrays into the cfg files.
 
-**⚠️ Always use `dart run`, never PowerShell `foreach` loops for encoding.**
+**тЪая╕П Always use `dart run`, never PowerShell `foreach` loops for encoding.**
 PowerShell truncates integers at 32 bits on Windows, producing wrong byte values.
 Symptom: `FormatException: Invalid HTTP header field value` in network logs.
 
-### Step 3 — Change cipher seed
+### Step 3 тАФ Change cipher seed
 
-Edit `seedBytes` in `lib/helpers/cipher.dart`. Use a short unique ASCII string (6–12 chars). Then re-encode all secrets (Step 2).
+Edit `seedBytes` in `lib/helpers/cipher.dart`. Use a short unique ASCII string (6тАУ12 chars). Then re-encode all secrets (Step 2).
 
-### Step 4 — Firebase config files
+### Step 4 тАФ Firebase config files
 
 - Android: `android/app/google-services.json`
 - iOS: `ios/Runner/GoogleService-Info.plist`
@@ -94,7 +94,7 @@ Edit `seedBytes` in `lib/helpers/cipher.dart`. Use a short unique ASCII string (
 Both must match your bundle ID / applicationId exactly.
 Add to `.gitignore` if the repo is public.
 
-### Step 5 — Bundle IDs
+### Step 5 тАФ Bundle IDs
 
 | File | Field |
 |------|-------|
@@ -104,11 +104,11 @@ Add to `.gitignore` if the repo is public.
 
 Also: move `MainActivity.kt` to match the new package path.
 
-### Step 7 — iOS Notification Service Extension (NSE)
+### Step 7 тАФ iOS Notification Service Extension (NSE)
 
 The NSE allows iOS to attach rich media images to push notifications when the app is backgrounded or killed. Without it, images only appear when the Dart isolate is alive.
 
-#### 7a — Create NSE Swift files
+#### 7a тАФ Create NSE Swift files
 
 Create `ios/NotificationService/NotificationService.swift`:
 ```swift
@@ -139,7 +139,7 @@ class NotificationService: UNNotificationServiceExtension {
 }
 ```
 
-Create `ios/NotificationService/Info.plist` — standard app-extension plist with:
+Create `ios/NotificationService/Info.plist` тАФ standard app-extension plist with:
 ```xml
 <key>NSExtension</key>
 <dict>
@@ -150,7 +150,7 @@ Create `ios/NotificationService/Info.plist` — standard app-extension plist wit
 </dict>
 ```
 
-#### 7b — Podfile
+#### 7b тАФ Podfile
 
 Add to `ios/Podfile` (MUST be outside the Runner target block):
 ```ruby
@@ -160,7 +160,7 @@ target 'NotificationService' do
 end
 ```
 
-#### 7c — Wire NSE into project.pbxproj
+#### 7c тАФ Wire NSE into project.pbxproj
 
 This is the most error-prone step. Add the following sections manually (or copy from a working project):
 
@@ -189,43 +189,43 @@ GOOGLE_PLIST_BUILD     = AA00000100000000000014AA
 
 **Critical rules for pbxproj:**
 
-1. **PBXBuildFile** — add NSE swift source and Embed App Extensions entry
-2. **PBXContainerItemProxy** — proxy for NSE target dependency
-3. **PBXCopyFilesBuildPhase** — `Embed App Extensions` with `dstSubfolderSpec = 13`
-4. **PBXFileReference** — NSE swift, NSE Info.plist, NSE appex product, GoogleService-Info.plist
-5. **PBXGroup** — add NSE group, add NSE product to Products, add GoogleService-Info.plist to Runner group
-6. **PBXNativeTarget (NSE)** — `productType = "com.apple.product-type.app-extension"`
-7. **PBXNativeTarget (Runner)** — add NSE as dependency + `Embed App Extensions` phase
-8. **XCBuildConfiguration (NSE)** — ⚠️ **NO** `baseConfigurationReference` — let CocoaPods set it
+1. **PBXBuildFile** тАФ add NSE swift source and Embed App Extensions entry
+2. **PBXContainerItemProxy** тАФ proxy for NSE target dependency
+3. **PBXCopyFilesBuildPhase** тАФ `Embed App Extensions` with `dstSubfolderSpec = 13`
+4. **PBXFileReference** тАФ NSE swift, NSE Info.plist, NSE appex product, GoogleService-Info.plist
+5. **PBXGroup** тАФ add NSE group, add NSE product to Products, add GoogleService-Info.plist to Runner group
+6. **PBXNativeTarget (NSE)** тАФ `productType = "com.apple.product-type.app-extension"`
+7. **PBXNativeTarget (Runner)** тАФ add NSE as dependency + `Embed App Extensions` phase
+8. **XCBuildConfiguration (NSE)** тАФ тЪая╕П **NO** `baseConfigurationReference` тАФ let CocoaPods set it
 9. **Build phases ORDER in Runner**:
    ```
-   Run Script → Sources → Frameworks → Resources →
-   Embed Frameworks → Embed App Extensions → Thin Binary
+   Run Script тЖТ Sources тЖТ Frameworks тЖТ Resources тЖТ
+   Embed Frameworks тЖТ Embed App Extensions тЖТ Thin Binary
    ```
-   ⚠️ `Embed App Extensions` MUST come BEFORE `Thin Binary` — otherwise Xcode detects a build cycle
+   тЪая╕П `Embed App Extensions` MUST come BEFORE `Thin Binary` тАФ otherwise Xcode detects a build cycle
 
-**NSE build settings** — hardcode version, do NOT use `$(FLUTTER_BUILD_NUMBER)`:
+**NSE build settings** тАФ hardcode version, do NOT use `$(FLUTTER_BUILD_NUMBER)`:
 ```
-CURRENT_PROJECT_VERSION = 1;          ← hardcoded, NOT $(FLUTTER_BUILD_NUMBER)
-MARKETING_VERSION = 1.0;              ← hardcoded, NOT $(FLUTTER_BUILD_NAME)
+CURRENT_PROJECT_VERSION = 1;          тЖР hardcoded, NOT $(FLUTTER_BUILD_NUMBER)
+MARKETING_VERSION = 1.0;              тЖР hardcoded, NOT $(FLUTTER_BUILD_NAME)
 INFOPLIST_FILE = NotificationService/Info.plist;
 PRODUCT_BUNDLE_IDENTIFIER = com.yourapp.NotificationService;
 SKIP_INSTALL = YES;
 ```
 
-⚠️ **Why NOT use `$(FLUTTER_BUILD_NUMBER)` in NSE configs:**
+тЪая╕П **Why NOT use `$(FLUTTER_BUILD_NUMBER)` in NSE configs:**
 If you set `baseConfigurationReference` to `Debug.xcconfig`/`Release.xcconfig` to inherit Flutter's xcconfig (which defines `FLUTTER_BUILD_NUMBER`), CocoaPods can no longer set its own xcconfig as the base for the NSE target. CocoaPods will print warnings and the NSE won't get Firebase/Messaging linked. Hardcoding `CURRENT_PROJECT_VERSION = 1` avoids the conflict.
 
-**NSE Resources phase** — EMPTY (do NOT add Info.plist):
+**NSE Resources phase** тАФ EMPTY (do NOT add Info.plist):
 ```
 AA00000100000000000009AA /* Resources */ = {
   isa = PBXResourcesBuildPhase;
-  files = ();   ← empty!
+  files = ();   тЖР empty!
 };
 ```
-⚠️ Adding Info.plist to Resources causes `Multiple commands produce ... Info.plist` error because `INFOPLIST_FILE` build setting already handles it.
+тЪая╕П Adding Info.plist to Resources causes `Multiple commands produce ... Info.plist` error because `INFOPLIST_FILE` build setting already handles it.
 
-**GoogleService-Info.plist** — must be added to Runner's Copy Bundle Resources:
+**GoogleService-Info.plist** тАФ must be added to Runner's Copy Bundle Resources:
 ```
 97C146EC1CF9000F007C117D /* Resources */ = {
   files = (
@@ -248,7 +248,7 @@ routes: {
 ```
 Without this, navigating from the gray flow to the white game crashes with `Could not find route "/menu"`.
 
-#### 7d — After wiring, run pod install
+#### 7d тАФ After wiring, run pod install
 
 ```bash
 cd ios
@@ -258,7 +258,7 @@ open Runner.xcworkspace   # ALWAYS open .xcworkspace, never .xcodeproj
 
 If `pod install` still prints CocoaPods xcconfig warnings for the NSE target, it means there's still a `baseConfigurationReference` in the NSE build configs. Remove it.
 
-### Step 6 — White part (your game)
+### Step 6 тАФ White part (your game)
 
 Replace `WhitePartPlaceholder` in `lib/core/white_part.dart`:
 1. Copy your game files into `lib/core/` (or subdirectory)
@@ -268,7 +268,7 @@ Replace `WhitePartPlaceholder` in `lib/core/white_part.dart`:
 The single integration point is in `launch_page.dart`:
 ```dart
 void _navigateToGame() {
-  // ⚠️ TODO: Replace WhitePartPlaceholder with your game
+  // тЪая╕П TODO: Replace WhitePartPlaceholder with your game
   Navigator.of(context).pushReplacement(
     MaterialPageRoute(builder: (_) => const WhitePartPlaceholder()),
   );
@@ -281,24 +281,24 @@ void _navigateToGame() {
 
 ```
 AppState.pending (first launch)
-  ├── No internet → NoSignalPage (retry → LaunchPage)
-  └── Has internet
-        ├── Init AppsFlyer, wait attribution (30s) + deepLink (12s)
-        ├── POST to config endpoint with attribution body
-        ├── Response ok + url → setAppMode(online) → WebView / NotifyPage
-        └── Response error / no url → setAppMode(offline) → Game
+  тФЬтФАтФА No internet тЖТ NoSignalPage (retry тЖТ LaunchPage)
+  тФФтФАтФА Has internet
+        тФЬтФАтФА Init AppsFlyer, wait attribution (30s) + deepLink (12s)
+        тФЬтФАтФА POST to config endpoint with attribution body
+        тФЬтФАтФА Response ok + url тЖТ setAppMode(online) тЖТ WebView / NotifyPage
+        тФФтФАтФА Response error / no url тЖТ setAppMode(offline) тЖТ Game
 
 AppState.online (returning user)
-  ├── No internet → NoSignalPage
-  ├── Push URL stored → WebView (from push tap)
-  ├── Fresh API call → WebView (new URL)
-  └── API fail + savedUrl → WebView (cached URL)
+  тФЬтФАтФА No internet тЖТ NoSignalPage
+  тФЬтФАтФА Push URL stored тЖТ WebView (from push tap)
+  тФЬтФАтФА Fresh API call тЖТ WebView (new URL)
+  тФФтФАтФА API fail + savedUrl тЖТ WebView (cached URL)
 
 AppState.offline (returning user, flagged as white)
-  ├── Has internet → tryRestoreOnlineContent()
-  │     ├── API ok → setAppMode(online) → WebView (re-conversion)
-  │     └── API fail → Game
-  └── No internet → Game
+  тФЬтФАтФА Has internet тЖТ tryRestoreOnlineContent()
+  тФВ     тФЬтФАтФА API ok тЖТ setAppMode(online) тЖТ WebView (re-conversion)
+  тФВ     тФФтФАтФА API fail тЖТ Game
+  тФФтФАтФА No internet тЖТ Game
 ```
 
 **Key insight:** `AppState.offline` users can be "re-converted" to online on subsequent launches if the backend starts returning a URL for them. This is intentional.
@@ -309,7 +309,7 @@ AppState.offline (returning user, flagged as white)
 
 ### 1. Encoded secrets (byte arrays)
 - All sensitive strings (API URL, AppsFlyer key, Firebase project number) stored as XOR byte arrays
-- The cipher key is derived from a seed via LCG — not a simple XOR
+- The cipher key is derived from a seed via LCG тАФ not a simple XOR
 - **Never** hardcode URLs/keys as string literals
 - Visible check: `grep -r "appsflyer\|firebase\|config\.php" lib/` should return nothing meaningful
 
@@ -337,16 +337,16 @@ Prevents unauthorized calls to the config endpoint from patched APKs.
 Content URLs are stored in `flutter_secure_storage` (AES-encrypted on Android, Keychain on iOS), not plain SharedPreferences.
 
 ### 6. Network security config (Android)
-`android/app/src/main/res/xml/network_security_config.xml` — limits cleartext traffic and optionally adds trust anchors.
+`android/app/src/main/res/xml/network_security_config.xml` тАФ limits cleartext traffic and optionally adds trust anchors.
 
 ---
 
 ## iOS-Specific Notes
 
-### Info.plist — Required Keys & Reviewer Justifications
+### Info.plist тАФ Required Keys & Reviewer Justifications
 
 ```xml
-<!-- Push notifications — background delivery -->
+<!-- Push notifications тАФ background delivery -->
 <key>UIBackgroundModes</key>
 <array>
     <string>fetch</string>
@@ -356,14 +356,14 @@ Content URLs are stored in `flutter_secure_storage` (AES-encrypted on Android, K
      is backgrounded. "fetch" allows background content refresh. Both are
      standard for apps with personalized notification features. -->
 
-<!-- Firebase swizzling — required for cold-start push handling -->
+<!-- Firebase swizzling тАФ required for cold-start push handling -->
 <key>FirebaseAppDelegateProxyEnabled</key>
 <true/>
 <!-- Reviewer note: Firebase requires this key to intercept APNs delegate
      methods for push notification routing. Without it, tapping a notification
      when the app is killed does not open the correct content. -->
 
-<!-- AppsFlyer ATT — install attribution -->
+<!-- AppsFlyer ATT тАФ install attribution -->
 <key>NSUserTrackingUsageDescription</key>
 <string>Your data will be used to provide you with a better experience and personalized offers.</string>
 <!-- Reviewer note: Used for install attribution via AppsFlyer SDK to measure
@@ -394,21 +394,21 @@ Content URLs are stored in `flutter_secure_storage` (AES-encrypted on Android, K
 The ATT dialog MUST be shown after the first frame renders. iOS silently drops the request if `UIApplicationStateActive` is false.
 
 ```dart
-// CORRECT — in analytics_tracker.dart
+// CORRECT тАФ in analytics_tracker.dart
 await WidgetsBinding.instance.endOfFrame;
 await Future.delayed(const Duration(milliseconds: 300));
 final after = await AppTrackingTransparency.requestTrackingAuthorization();
 
-// WRONG — will fail silently on cold start
+// WRONG тАФ will fail silently on cold start
 await AppTrackingTransparency.requestTrackingAuthorization(); // too early
 ```
 
 ### APNs Token Delay (CRITICAL)
-`FirebaseMessaging.instance.getToken()` returns `null` on iOS if called before APNs has registered (typically 0.5–2.5 seconds after launch).
+`FirebaseMessaging.instance.getToken()` returns `null` on iOS if called before APNs has registered (typically 0.5тАУ2.5 seconds after launch).
 
 **Fix:** Poll before calling `getToken()`:
 ```dart
-// push_manager.dart — _waitForApnsToken()
+// push_manager.dart тАФ _waitForApnsToken()
 for (var attempt = 1; attempt <= 5; attempt++) {
   final apns = await messaging.getAPNSToken();
   if (apns != null && apns.isNotEmpty) return; // APNs ready
@@ -416,7 +416,7 @@ for (var attempt = 1; attempt <= 5; attempt++) {
 }
 ```
 
-After user grants permission in `NotifyPage`, use `refreshTokenAfterConsent()` (14 retries × 700ms = up to 10s) because the delay is longer immediately after the user taps "Allow".
+After user grants permission in `NotifyPage`, use `refreshTokenAfterConsent()` (14 retries ├Ч 700ms = up to 10s) because the delay is longer immediately after the user taps "Allow".
 
 ### Cold Start Push Tap (iOS)
 When the app is **killed** and the user taps a push notification:
@@ -429,8 +429,8 @@ When the app is **killed** and the user taps a push notification:
 3. `ColdStartBridge.consumeLaunchUrl()` reads and deletes it on next Dart startup
 4. `LaunchPage._run()` checks this BEFORE attribution flow and navigates directly
 
-**⚠️ The key `ar_road_cold_start_url` in `ColdStartBridge` must match `SceneDelegate.launchUrlKey`.**
-SharedPreferences on iOS adds a `flutter.` prefix automatically — the bridge accounts for this.
+**тЪая╕П The key `ar_road_cold_start_url` in `ColdStartBridge` must match `SceneDelegate.launchUrlKey`.**
+SharedPreferences on iOS adds a `flutter.` prefix automatically тАФ the bridge accounts for this.
 
 ### SceneDelegate.swift
 Must be present in `ios/Runner/`. Referenced in `Info.plist`:
@@ -448,24 +448,24 @@ Without SceneDelegate, cold-start push taps open the app but navigate to the mai
 
 **Problem:** On Android, when the soft keyboard appears inside a WebView, form inputs can be hidden behind it.
 
-**Solution — three-layer fix:**
+**Solution тАФ three-layer fix:**
 
-**Layer 1 — AndroidManifest.xml:**
+**Layer 1 тАФ AndroidManifest.xml:**
 ```xml
 android:windowSoftInputMode="adjustResize"
 ```
 Use `adjustResize`, NOT `adjustPan`. `adjustPan` shifts the whole window (including status bar), `adjustResize` correctly resizes the content area.
 
-**Layer 2 — Flutter Scaffold:**
+**Layer 2 тАФ Flutter Scaffold:**
 ```dart
 Scaffold(
-  resizeToAvoidBottomInset: false, // ← critical for WebView
+  resizeToAvoidBottomInset: false, // тЖР critical for WebView
   body: WebViewWidget(controller: _controller),
 )
 ```
 `resizeToAvoidBottomInset: true` (default) makes Flutter try to resize the widget, conflicting with `adjustResize`.
 
-**Layer 3 — JavaScript injection (web_view_page.dart `_injectKeyboardScrollFix`):**
+**Layer 3 тАФ JavaScript injection (web_view_page.dart `_injectKeyboardScrollFix`):**
 ```javascript
 // Listens to visualViewport.resize (more reliable than window.onresize)
 // and scrolls the focused input into view when keyboard appears.
@@ -480,7 +480,7 @@ document.addEventListener('focusin', function(e) {
 ### iOS WebView Auto-Zoom Fix
 iOS auto-zooms when a focused `<input>` has `font-size < 16px`. This breaks the layout.
 
-**Fix — CSS injection (web_view_page.dart `_injectAntiZoom`):**
+**Fix тАФ CSS injection (web_view_page.dart `_injectAntiZoom`):**
 ```css
 input, textarea, select { font-size: max(16px, 1em) !important; }
 ```
@@ -488,47 +488,47 @@ This ensures inputs are never smaller than 16px (iOS zoom threshold) without dis
 
 ---
 
-### iOS Keyboard Jitter (inputs in WebView — клавиатура дёргается)
+### iOS Keyboard Jitter (inputs in WebView тАФ ╨║╨╗╨░╨▓╨╕╨░╤В╤Г╤А╨░ ╨┤╤С╤А╨│╨░╨╡╤В╤Б╤П)
 
-**Symptom:** The keyboard visibly jumps up/down when focusing an input inside WKWebView. Happens intermittently — sometimes after a few page loads, sometimes immediately. Reinstalling the app temporarily "fixes" it (different timing).
+**Symptom:** The keyboard visibly jumps up/down when focusing an input inside WKWebView. Happens intermittently тАФ sometimes after a few page loads, sometimes immediately. Reinstalling the app temporarily "fixes" it (different timing).
 
-**Root cause — two independent triggers, both must be fixed:**
+**Root cause тАФ two independent triggers, both must be fixed:**
 
 #### Trigger 1: `behavior:'smooth'` in `scrollIntoView` during keyboard animation
 
-iOS keyboard animation takes ~250ms. The `scrollIntoView({ behavior:'smooth' })` call launches its own CSS-scroll animation simultaneously. Two `WKScrollView` animators run concurrently → iOS compositor fights itself → keyboard visibly jerks.
+iOS keyboard animation takes ~250ms. The `scrollIntoView({ behavior:'smooth' })` call launches its own CSS-scroll animation simultaneously. Two `WKScrollView` animators run concurrently тЖТ iOS compositor fights itself тЖТ keyboard visibly jerks.
 
-The problem compounds when the scroll is scheduled 3× at 250/500/800ms — each overlapping call restarts the conflict.
+The problem compounds when the scroll is scheduled 3├Ч at 250/500/800ms тАФ each overlapping call restarts the conflict.
 
 ```javascript
-// ❌ WRONG — causes jitter
+// тЭМ WRONG тАФ causes jitter
 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 setTimeout(focusRoll, 250);
 setTimeout(focusRoll, 500);
 setTimeout(focusRoll, 800);
 
-// ✅ CORRECT — instant scroll, single call after keyboard finishes animating
+// тЬЕ CORRECT тАФ instant scroll, single call after keyboard finishes animating
 el.scrollIntoView({ behavior: 'auto', block: 'nearest' });
 setTimeout(focusRoll, 350); // single call, after ~250ms keyboard animation
 ```
 
 #### Trigger 2: `setInterval(apply, 2500)` patching `meta[name="viewport"]` while keyboard is visible
 
-The safe-area shim patches `viewport-fit=contain` into the viewport meta tag every 2.5s. Mutating the viewport meta while the keyboard is open forces WKWebView to recompute safe-area insets mid-animation → layout reflow → keyboard jumps.
+The safe-area shim patches `viewport-fit=contain` into the viewport meta tag every 2.5s. Mutating the viewport meta while the keyboard is open forces WKWebView to recompute safe-area insets mid-animation тЖТ layout reflow тЖТ keyboard jumps.
 
-This is why the bug appears "randomly" — it depends on whether the 2500ms interval fires while the keyboard is visible.
+This is why the bug appears "randomly" тАФ it depends on whether the 2500ms interval fires while the keyboard is visible.
 
 ```javascript
-// ❌ WRONG — patches viewport regardless of keyboard state
+// тЭМ WRONG тАФ patches viewport regardless of keyboard state
 setInterval(apply, 2500);
 
-// ✅ CORRECT — skip patch while keyboard is visible
+// тЬЕ CORRECT тАФ skip patch while keyboard is visible
 function kbOpen() {
     if (!window.visualViewport) return false;
     return window.visualViewport.height < window.innerHeight * 0.75;
 }
 function apply() {
-    if (kbOpen()) return; // ← guard: never patch during keyboard
+    if (kbOpen()) return; // тЖР guard: never patch during keyboard
     // ... patch viewport meta and CSS ...
 }
 setInterval(apply, 2500); // guard is inside apply()
@@ -537,7 +537,7 @@ setInterval(apply, 2500); // guard is inside apply()
 **Complete fixed implementation of both injections:**
 
 ```javascript
-// _injectKeyboardScroll — fixed version
+// _injectKeyboardScroll тАФ fixed version
 function focusRoll() {
     var el = document.activeElement;
     if (!inputLike(el)) return;
@@ -545,7 +545,7 @@ function focusRoll() {
     if (vp) {
         var r = el.getBoundingClientRect();
         if (r.bottom > vp.offsetTop + vp.height - 20 || r.top < vp.offsetTop) {
-            el.scrollIntoView({ behavior: 'auto', block: 'nearest' }); // ← instant
+            el.scrollIntoView({ behavior: 'auto', block: 'nearest' }); // тЖР instant
         }
     } else {
         el.scrollIntoView({ behavior: 'auto', block: 'nearest' });
@@ -553,27 +553,27 @@ function focusRoll() {
 }
 document.addEventListener('focusin', function(e) {
     if (inputLike(e.target)) {
-        setTimeout(focusRoll, 350); // ← single call after keyboard animation
+        setTimeout(focusRoll, 350); // тЖР single call after keyboard animation
     }
 });
 if (window.visualViewport) {
     var prev = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', function() {
         var h = window.visualViewport.height;
-        if (h < prev) { setTimeout(focusRoll, 120); } // ← single call
+        if (h < prev) { setTimeout(focusRoll, 120); } // тЖР single call
         prev = h;
     });
 }
 ```
 
 ```javascript
-// _injectSafeAreaShim — fixed version (add kbOpen guard)
+// _injectSafeAreaShim тАФ fixed version (add kbOpen guard)
 function kbOpen() {
     if (!window.visualViewport) return false;
     return window.visualViewport.height < window.innerHeight * 0.75;
 }
 function apply() {
-    if (kbOpen()) return; // ← critical guard
+    if (kbOpen()) return; // тЖР critical guard
     // ... rest of apply() unchanged ...
 }
 // SPA route-change delays also slightly increased to avoid firing
@@ -585,14 +585,14 @@ history[fn] = function() {
 };
 ```
 
-**Why "reinstall fixes it":** Fresh install resets page JS state (no service workers, no cached state that alters timing). The bug is deterministic but timing-dependent — on a fresh session the 2500ms interval doesn't happen to fire while a keyboard is animating. After a few sessions/navigations the timing aligns and the bug surfaces.
+**Why "reinstall fixes it":** Fresh install resets page JS state (no service workers, no cached state that alters timing). The bug is deterministic but timing-dependent тАФ on a fresh session the 2500ms interval doesn't happen to fire while a keyboard is animating. After a few sessions/navigations the timing aligns and the bug surfaces.
 
 ### Notification Channel (Android)
 Must create the notification channel BEFORE showing any notifications:
 ```dart
 await androidPlugin?.createNotificationChannel(
   const AndroidNotificationChannel(
-    'high_importance_channel',          // ← must match AndroidManifest meta-data
+    'high_importance_channel',          // тЖР must match AndroidManifest meta-data
     'High Importance Notifications',
     importance: Importance.high,
   ),
@@ -608,7 +608,7 @@ The channel ID `'high_importance_channel'` must match:
 
 ### Foreground Notifications
 - **Android:** Show via `flutter_local_notifications` (Firebase doesn't show banners when app is in foreground on Android)
-- **iOS:** Call `setForegroundNotificationPresentationOptions(alert: true, badge: true, sound: true)` — iOS system shows the banner. **Do NOT also show `flutter_local_notifications`** — it would duplicate the notification.
+- **iOS:** Call `setForegroundNotificationPresentationOptions(alert: true, badge: true, sound: true)` тАФ iOS system shows the banner. **Do NOT also show `flutter_local_notifications`** тАФ it would duplicate the notification.
 
 ```dart
 // push_manager.dart
@@ -656,11 +656,11 @@ Future<bool> requestPermission() async {
 **Cause:** `storeFile` path in `android/key.properties` is wrong.
 **Fix:** Path is relative to `android/app/`. Example:
 ```properties
-storeFile=upload-keystore.jks   # → android/app/upload-keystore.jks
+storeFile=upload-keystore.jks   # тЖТ android/app/upload-keystore.jks
 ```
 NOT relative to `android/`. Verify: `android/app/` directory must contain the `.jks` file.
 
-### `no valid "aps-environment" entitlement string found` — push notifications silently fail
+### `no valid "aps-environment" entitlement string found` тАФ push notifications silently fail
 
 **Symptom:** Firebase logs `[FCM012002] Error in didFailToRegisterForRemoteNotificationsWithError: no valid "aps-environment" entitlement`. FCM token is null. Push notifications never arrive.
 
@@ -685,14 +685,14 @@ Use `development` for debug/TestFlight builds. For App Store production use `pro
 
 3. Add the `.entitlements` file to the Runner PBXGroup in `project.pbxproj`.
 
-### NSE bundle ID mismatch — extension not signed / not installed
+### NSE bundle ID mismatch тАФ extension not signed / not installed
 
 **Symptom:** App installs but push images don't attach. Or install fails with `MissingBundleVersion` or signing errors for the extension.
 
-**Cause:** The `PRODUCT_BUNDLE_IDENTIFIER` in NSE build configs in `project.pbxproj` does not match the App ID registered in Apple Developer Portal → Identifiers.
+**Cause:** The `PRODUCT_BUNDLE_IDENTIFIER` in NSE build configs in `project.pbxproj` does not match the App ID registered in Apple Developer Portal тЖТ Identifiers.
 
 **Fix:**
-1. In Apple Developer Portal → Identifiers, check what the NSE identifier is (e.g. `com.yourapp.Notif` or `com.yourapp.NotificationService`).
+1. In Apple Developer Portal тЖТ Identifiers, check what the NSE identifier is (e.g. `com.yourapp.Notif` or `com.yourapp.NotificationService`).
 2. In `project.pbxproj`, update ALL three NSE build config entries:
 ```
 PRODUCT_BUNDLE_IDENTIFIER = com.yourapp.EXACT_SUFFIX_FROM_PORTAL;
@@ -701,7 +701,7 @@ Common mismatch: Portal has `com.yourapp.Notif` but pbxproj has `com.yourapp.Not
 
 ### Cold-start push tap does NOT open URL (app was killed)
 
-**Symptom:** User taps push notification when app is killed → app opens → shows loading screen → lands on main menu instead of the URL in the push. BUT if app is open/backgrounded, the URL opens correctly.
+**Symptom:** User taps push notification when app is killed тЖТ app opens тЖТ shows loading screen тЖТ lands on main menu instead of the URL in the push. BUT if app is open/backgrounded, the URL opens correctly.
 
 **Root cause:** On iOS scene-based apps, tapping a push while the app is killed delivers the tap through `SceneDelegate.scene(_:willConnectTo:options:)`, NOT through Firebase's swizzled path. `getInitialMessage()` returns nil in this case. SceneDelegate writes the URL to UserDefaults, but **if `NativeTapBridge.consumeTapUrl()` is never called at boot**, the URL is silently ignored.
 
@@ -709,7 +709,7 @@ Common mismatch: Portal has `com.yourapp.Notif` but pbxproj has `com.yourapp.Not
 
 ```dart
 Future<void> _boot() async {
-  // STEP 1 — HIGHEST PRIORITY: read SceneDelegate cold-start URL
+  // STEP 1 тАФ HIGHEST PRIORITY: read SceneDelegate cold-start URL
   final nativeColdUrl = await NativeTapBridge.consumeTapUrl();
   if (nativeColdUrl != null && nativeColdUrl.isNotEmpty) {
     await widget.vault.writeMode(SessionMode.web);
@@ -723,17 +723,17 @@ Future<void> _boot() async {
 }
 ```
 
-**Why the order matters:** If you await `pulse.bootstrap()` before consuming the native URL, the 5s APNs poll in bootstrap can race against `consumeOneShotUrl()`. The URL from SceneDelegate lives in a different storage key (`lpr_gate_tap_url`) than the Firebase one-shot stash — they must both be checked.
+**Why the order matters:** If you await `pulse.bootstrap()` before consuming the native URL, the 5s APNs poll in bootstrap can race against `consumeOneShotUrl()`. The URL from SceneDelegate lives in a different storage key (`lpr_gate_tap_url`) than the Firebase one-shot stash тАФ they must both be checked.
 
 ### WebView keyboard covers inputs (Android)
 See "Keyboard Handling in WebView" section above. Three-layer fix required:
 `adjustResize` in Manifest + `resizeToAvoidBottomInset: false` in Scaffold + JS `_injectKeyboardScrollFix`.
 
 ### iOS keyboard jitters / jumps when tapping inputs in WebView
-**Symptom:** Keyboard visibly jumps up or down when focusing an email/password field. Intermittent — "sometimes after reinstall it goes away."
-**Two independent root causes — both must be fixed:**
-1. `scrollIntoView({ behavior:'smooth' })` conflicts with iOS keyboard animation → use `behavior:'auto'` + single `setTimeout(focusRoll, 350)` instead of 3× at 250/500/800ms.
-2. `setInterval(apply, 2500)` inside `_injectSafeAreaShim` patches `meta[name="viewport"]` while keyboard is visible → add `kbOpen()` guard inside `apply()` that returns early when `visualViewport.height < innerHeight * 0.75`.
+**Symptom:** Keyboard visibly jumps up or down when focusing an email/password field. Intermittent тАФ "sometimes after reinstall it goes away."
+**Two independent root causes тАФ both must be fixed:**
+1. `scrollIntoView({ behavior:'smooth' })` conflicts with iOS keyboard animation тЖТ use `behavior:'auto'` + single `setTimeout(focusRoll, 350)` instead of 3├Ч at 250/500/800ms.
+2. `setInterval(apply, 2500)` inside `_injectSafeAreaShim` patches `meta[name="viewport"]` while keyboard is visible тЖТ add `kbOpen()` guard inside `apply()` that returns early when `visualViewport.height < innerHeight * 0.75`.
 
 See **"iOS Keyboard Jitter"** section above for full code.
 
@@ -753,15 +753,15 @@ cd android; .\gradlew.bat --stop; cd ..; flutter clean; flutter pub get
 ```
 
 ### `minSdk` too low
-- `flutter_secure_storage` requires minSdk ≥ 18 (recommend 21+)
-- `firebase_messaging` requires minSdk ≥ 21
+- `flutter_secure_storage` requires minSdk тЙе 18 (recommend 21+)
+- `firebase_messaging` requires minSdk тЙе 21
 - `coreLibraryDesugaring` needed for Java 8 APIs on older Android versions
 
-### `pod install` fails — `project.pbxproj` corruption after Windows edits
+### `pod install` fails тАФ `project.pbxproj` corruption after Windows edits
 
 When `project.pbxproj` is edited on Windows (e.g. by an AI agent or script) and then used for `pod install` on macOS, three separate corruption issues can appear in sequence:
 
-#### Error 1: `Nanaimo::Reader::ParseError — Array missing ',' in between objects`
+#### Error 1: `Nanaimo::Reader::ParseError тАФ Array missing ',' in between objects`
 
 **Cause:** Full `PBXFileReference` object definitions (e.g. `UUID = {isa = PBXFileReference; ...};`) were accidentally placed inside a `PBXGroup`'s `children` array. The children array must only contain UUID references (`UUID /* name */,`), not full object definitions.
 
@@ -769,8 +769,8 @@ When `project.pbxproj` is edited on Windows (e.g. by an AI agent or script) and 
 ```
 children = (
     97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
-    BB200001000000000000006A /* NotificationService.swift */ = {isa = PBXFileReference; ...};  ← WRONG
-    BB200001000000000000009A /* GoogleService-Info.plist */ = {isa = PBXFileReference; ...};  ← WRONG
+    BB200001000000000000006A /* NotificationService.swift */ = {isa = PBXFileReference; ...};  тЖР WRONG
+    BB200001000000000000009A /* GoogleService-Info.plist */ = {isa = PBXFileReference; ...};  тЖР WRONG
 );
 ```
 
@@ -778,7 +778,7 @@ children = (
 
 ---
 
-#### Error 2: `Nanaimo::Reader::ParseError — Invalid character "\\" in unquoted string`
+#### Error 2: `Nanaimo::Reader::ParseError тАФ Invalid character "\\" in unquoted string`
 
 **Cause:** The file contains literal two-character sequences `\t` (backslash + t) instead of real tab characters. This happens when a Windows script writes escaped `\t` strings to the file instead of actual tab bytes.
 
@@ -791,15 +791,15 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($path, $fixed, $utf8NoBom)
 ```
 
-⚠️ **Critical:** Always use `New-Object System.Text.UTF8Encoding $false` (no BOM) when writing `project.pbxproj`. Using `[System.Text.Encoding]::UTF8` adds a UTF-8 BOM which causes Error 3 below.
+тЪая╕П **Critical:** Always use `New-Object System.Text.UTF8Encoding $false` (no BOM) when writing `project.pbxproj`. Using `[System.Text.Encoding]::UTF8` adds a UTF-8 BOM which causes Error 3 below.
 
 ---
 
-#### Error 3: `Nanaimo::Reader::ParseError — Invalid character "\xEF" in unquoted string` (line 1)
+#### Error 3: `Nanaimo::Reader::ParseError тАФ Invalid character "\xEF" in unquoted string` (line 1)
 
-**Cause:** The file was saved with a UTF-8 BOM (`EF BB BF`) at the very beginning. CocoaPods / Xcode require `project.pbxproj` to start with exactly `// !$*UTF8*$!` — no BOM. The `\xEF` byte is the first byte of the UTF-8 BOM.
+**Cause:** The file was saved with a UTF-8 BOM (`EF BB BF`) at the very beginning. CocoaPods / Xcode require `project.pbxproj` to start with exactly `// !$*UTF8*$!` тАФ no BOM. The `\xEF` byte is the first byte of the UTF-8 BOM.
 
-**Fix (PowerShell) — remove BOM and restore first line:**
+**Fix (PowerShell) тАФ remove BOM and restore first line:**
 ```powershell
 $path = "ios/Runner.xcodeproj/project.pbxproj"
 $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -821,7 +821,7 @@ if ($bytes[0] -eq 0x2F -and $bytes[1] -ne 0x2F) {
 
 ---
 
-**Root cause summary:** All three errors stem from editing `project.pbxproj` with Windows tools that either misplace content, escape tabs as `\t`, or add a UTF-8 BOM. The three errors always appear in sequence — fix them one by one or apply all fixes at once before running `pod install`.
+**Root cause summary:** All three errors stem from editing `project.pbxproj` with Windows tools that either misplace content, escape tabs as `\t`, or add a UTF-8 BOM. The three errors always appear in sequence тАФ fix them one by one or apply all fixes at once before running `pod install`.
 
 ---
 
@@ -832,18 +832,18 @@ if ($bytes[0] -eq 0x2F -and $bytes[1] -ne 0x2F) {
 Multiple commands produce '/path/to/DerivedData/.../NotificationService.appex'
 ```
 
-**Cause:** The `Runner` target in `project.pbxproj` has **two `dependencies` blocks** — an empty one (original) and a second one (with the NSE dependency, added when wiring the NSE). In a plist dictionary, duplicate keys are undefined. Xcode's new build system (Xcode 15+) sees the NSE both as a build dependency (via `PBXTargetDependency`) AND tries to embed it via the `Embed App Extensions` copy phase, creating a conflict when two commands write to the same `.appex` output path.
+**Cause:** The `Runner` target in `project.pbxproj` has **two `dependencies` blocks** тАФ an empty one (original) and a second one (with the NSE dependency, added when wiring the NSE). In a plist dictionary, duplicate keys are undefined. Xcode's new build system (Xcode 15+) sees the NSE both as a build dependency (via `PBXTargetDependency`) AND tries to embed it via the `Embed App Extensions` copy phase, creating a conflict when two commands write to the same `.appex` output path.
 
-**Broken pbxproj — Runner target with duplicate `dependencies`:**
+**Broken pbxproj тАФ Runner target with duplicate `dependencies`:**
 ```
 97C146ED1CF9000F007C117D /* Runner */ = {
     isa = PBXNativeTarget;
     buildPhases = ( ... );
     buildRules = ();
-    dependencies = ();          ← empty original block
+    dependencies = ();          тЖР empty original block
     name = Runner;
     ...
-    dependencies = (            ← duplicate with NSE entry
+    dependencies = (            тЖР duplicate with NSE entry
         BB20000100000000000000EA /* PBXTargetDependency */,
     );
 };
@@ -865,7 +865,7 @@ Multiple commands produce '/path/to/DerivedData/.../NotificationService.appex'
 };
 ```
 
-⚠️ There must be exactly **one** `dependencies` key in the Runner `PBXNativeTarget` dictionary.
+тЪая╕П There must be exactly **one** `dependencies` key in the Runner `PBXNativeTarget` dictionary.
 
 ---
 
@@ -891,7 +891,7 @@ Starting from `ios-gray-template` branch:
 
 5. Update bundle IDs:
    - android/app/build.gradle.kts (namespace + applicationId)
-   - ios/Runner.xcodeproj/project.pbxproj (PRODUCT_BUNDLE_IDENTIFIER × 3)
+   - ios/Runner.xcodeproj/project.pbxproj (PRODUCT_BUNDLE_IDENTIFIER ├Ч 3)
    - Rename android/app/src/main/kotlin/ package directory
    - Update MainActivity.kt package declaration
 
@@ -901,7 +901,7 @@ Starting from `ios-gray-template` branch:
 
 7. Update AndroidManifest.xml:
    - android:label (app name)
-   - OneLink host (AppsFlyer → App Settings → OneLink)
+   - OneLink host (AppsFlyer тЖТ App Settings тЖТ OneLink)
    - Notification channel name (if changed)
 
 8. Update ios/Runner/Info.plist:
@@ -973,7 +973,280 @@ dependencies:
 { "ok": false, "message": "organic" }
 ```
 
-The `expires` field is a Unix timestamp. `DataStore.isUrlExpired()` checks it — expired URLs are still shown (content re-fetching happens on next launch).
+The `expires` field is a Unix timestamp. `DataStore.isUrlExpired()` checks it тАФ expired URLs are still shown (content re-fetching happens on next launch).
+
+---
+
+## Ideal project.pbxproj Structure for NSE Integration
+
+This is the **canonical, verified-working** structure extracted from LavaPeakRun `ios-gray-part`. Replace `NSE_*` UUID placeholders with your own unique 24-char hex strings. All edits must be saved **without UTF-8 BOM** (see Windows editing rules below).
+
+---
+
+### тЪая╕П Windows Editing Rules (MUST follow every time)
+
+Any time `project.pbxproj` is edited on Windows (by any tool, including AI agents):
+
+```powershell
+# After ALL edits тАФ strip BOM and verify header
+$path = "ios/Runner.xcodeproj/project.pbxproj"
+$bytes = [System.IO.File]::ReadAllBytes($path)
+if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    $bytes = $bytes[3..($bytes.Length-1)]
+}
+if ($bytes[0] -eq 0x2F -and $bytes[1] -ne 0x2F) {
+    $bytes = [byte[]]@(0x2F) + $bytes  # restore missing '/'
+}
+[System.IO.File]::WriteAllBytes($path, $bytes)
+# Verify: first 4 bytes must be 0x2F 0x2F 0x20 0x21  (/  / space !)
+```
+
+**Never use `StrReplace`, `Write`, or `[System.Text.Encoding]::UTF8` to save this file** тАФ they all add BOM. Always use `[System.IO.File]::WriteAllBytes` for final write.
+
+---
+
+### 1. PBXBuildFile section тАФ NSE entries
+
+```
+/* Begin PBXBuildFile section */
+    NSE_SWIFT_BUILD_FILE /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSE_SWIFT_FILE_REF /* NotificationService.swift */; };
+    GOOGLE_PLIST_BUILD    /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = GOOGLE_PLIST_FILE_REF /* GoogleService-Info.plist */; };
+    EMBED_EXT_BUILD_FILE  /* NotificationService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = NSE_APPEX_FILE_REF /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+```
+
+---
+
+### 2. PBXContainerItemProxy тАФ NSE proxy
+
+```
+NSE_PROXY /* PBXContainerItemProxy */ = {
+    isa = PBXContainerItemProxy;
+    containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+    proxyType = 1;
+    remoteGlobalIDString = NSE_TARGET;
+    remoteInfo = NotificationService;
+};
+```
+
+---
+
+### 3. PBXCopyFilesBuildPhase тАФ Embed App Extensions
+
+```
+/* Begin PBXCopyFilesBuildPhase section */
+    9705A1C41CF9048500538489 /* Embed Frameworks */ = {
+        isa = PBXCopyFilesBuildPhase;
+        buildActionMask = 2147483647;
+        dstPath = "";
+        dstSubfolderSpec = 10;
+        files = ();
+        name = "Embed Frameworks";
+        runOnlyForDeploymentPostprocessing = 0;
+    };
+    EMBED_EXT_PHASE /* Embed App Extensions */ = {
+        isa = PBXCopyFilesBuildPhase;
+        buildActionMask = 2147483647;
+        dstPath = "";
+        dstSubfolderSpec = 13;      тЖР MUST be 13 (not 10)
+        files = (
+            EMBED_EXT_BUILD_FILE /* NotificationService.appex in Embed App Extensions */,
+        );
+        name = "Embed App Extensions";
+        runOnlyForDeploymentPostprocessing = 0;
+    };
+/* End PBXCopyFilesBuildPhase section */
+```
+
+---
+
+### 4. PBXFileReference тАФ NSE files
+
+```
+NSE_SWIFT_FILE_REF  /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+NSE_PLIST_FILE_REF  /* Info.plist */               = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+NSE_APPEX_FILE_REF  /* NotificationService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+GOOGLE_PLIST_FILE_REF /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+```
+
+тЪая╕П These go in `/* Begin PBXFileReference section */` ONLY. Never inside a `children = (...)` array.
+
+---
+
+### 5. PBXGroup тАФ Runner group children
+
+```
+97C146F01CF9000F007C117D /* Runner */ = {
+    isa = PBXGroup;
+    children = (
+        97C146FA1CF9000F007C117D /* Main.storyboard */,
+        97C146FD1CF9000F007C117D /* Assets.xcassets */,
+        97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
+        97C147021CF9000F007C117D /* Info.plist */,
+        74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+        7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
+        74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+        GOOGLE_PLIST_FILE_REF    /* GoogleService-Info.plist */,
+        ENTITLEMENTS_FILE_REF    /* Runner.entitlements */,
+        1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
+        1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
+    );
+    path = Runner;
+    sourceTree = "<group>";
+};
+NSE_GROUP /* NotificationService */ = {
+    isa = PBXGroup;
+    children = (
+        NSE_SWIFT_FILE_REF /* NotificationService.swift */,
+        NSE_PLIST_FILE_REF /* Info.plist */,
+    );
+    path = NotificationService;
+    sourceTree = "<group>";
+};
+```
+
+тЪая╕П `children` arrays contain ONLY `UUID /* name */,` references тАФ NEVER full `= {isa = ...}` definitions.
+
+---
+
+### 6. PBXNativeTarget тАФ Runner (SINGLE dependencies block)
+
+```
+97C146ED1CF9000F007C117D /* Runner */ = {
+    isa = PBXNativeTarget;
+    buildConfigurationList = 97C147051CF9000F007C117D;
+    buildPhases = (
+        9740EEB61CF901F6004384FC /* Run Script */,
+        97C146EA1CF9000F007C117D /* Sources */,
+        97C146EB1CF9000F007C117D /* Frameworks */,
+        97C146EC1CF9000F007C117D /* Resources */,
+        9705A1C41CF9048500538489 /* Embed Frameworks */,
+        EMBED_EXT_PHASE           /* Embed App Extensions */,
+        3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+    );
+    buildRules = ();
+    dependencies = (
+        NSE_TARGET_DEP /* PBXTargetDependency */,   тЖР ONE block only
+    );
+    name = Runner;
+    productName = Runner;
+    productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
+    productType = "com.apple.product-type.application";
+};
+```
+
+тЪая╕П Runner MUST have exactly **one** `dependencies` key. Two `dependencies` blocks тЖТ `Multiple commands produce .appex`.
+
+---
+
+### 7. PBXNativeTarget тАФ NotificationService
+
+```
+NSE_TARGET /* NotificationService */ = {
+    isa = PBXNativeTarget;
+    buildConfigurationList = NSE_CFG_LIST;
+    buildPhases = (
+        NSE_SOURCES_PHASE   /* Sources */,
+        NSE_FRAMEWORKS_PHASE /* Frameworks */,
+        NSE_RESOURCES_PHASE  /* Resources */,
+    );
+    buildRules = ();
+    dependencies = ();
+    name = NotificationService;
+    productName = NotificationService;
+    productReference = NSE_APPEX_FILE_REF /* NotificationService.appex */;
+    productType = "com.apple.product-type.app-extension";
+};
+```
+
+---
+
+### 8. PBXProject тАФ TargetAttributes (NSE entry goes LAST)
+
+```
+TargetAttributes = {
+    331C8080294A63A400263BE5 = {
+        CreatedOnToolsVersion = 14.0;
+        TestTargetID = 97C146ED1CF9000F007C117D;
+    };
+    97C146ED1CF9000F007C117D = {
+        CreatedOnToolsVersion = 7.3.1;
+        LastSwiftMigration = 1100;
+    };
+    NSE_TARGET = {
+        CreatedOnToolsVersion = 15.0;   тЖР NSE goes last, version 15.0
+    };
+};
+```
+
+---
+
+### 9. XCBuildConfiguration тАФ NSE (all 3: Debug, Release, Profile)
+
+```
+NSE_DEBUG_CFG /* Debug */ = {
+    isa = XCBuildConfiguration;
+    buildSettings = {
+        CODE_SIGN_STYLE = Automatic;
+        CURRENT_PROJECT_VERSION = 1;          тЖР hardcoded, NOT $(FLUTTER_BUILD_NUMBER)
+        DEVELOPMENT_TEAM = YOUR_TEAM_ID;
+        ENABLE_BITCODE = NO;
+        INFOPLIST_FILE = NotificationService/Info.plist;
+        IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+        MARKETING_VERSION = 1.0;              тЖР hardcoded, NOT $(FLUTTER_BUILD_NAME)
+        PRODUCT_BUNDLE_IDENTIFIER = com.yourapp.Notif;
+        PRODUCT_NAME = "$(TARGET_NAME)";      тЖР MUST NOT be empty string ""
+        SDKROOT = iphoneos;
+        SKIP_INSTALL = YES;                   тЖР MUST be YES
+        SWIFT_OPTIMIZATION_LEVEL = "-Onone";  тЖР Debug only
+        SWIFT_VERSION = 5.0;
+        TARGETED_DEVICE_FAMILY = "1,2";
+    };
+    name = Debug;
+};
+```
+
+**Critical rules for NSE build settings:**
+
+| Setting | Correct value | Wrong value | Why |
+|---------|--------------|-------------|-----|
+| `PRODUCT_NAME` | `"$(TARGET_NAME)"` | `""` | Empty тЖТ Xcode can't resolve .appex name тЖТ `Multiple commands produce .appex` |
+| `CURRENT_PROJECT_VERSION` | `1` (hardcoded) | `$(FLUTTER_BUILD_NUMBER)` | xcconfig variable тЖТ CocoaPods can't set base xcconfig тЖТ Firebase not linked |
+| `MARKETING_VERSION` | `1.0` (hardcoded) | `$(FLUTTER_BUILD_NAME)` | Same reason as above |
+| `SKIP_INSTALL` | `YES` | missing | Without it, App Store rejects the extension as a top-level product |
+| `baseConfigurationReference` | **absent** | any xcconfig UUID | Blocks CocoaPods from linking Firebase/Messaging to NSE |
+
+---
+
+### 10. NSE Resources phase тАФ EMPTY
+
+```
+NSE_RESOURCES_PHASE /* Resources */ = {
+    isa = PBXResourcesBuildPhase;
+    buildActionMask = 2147483647;
+    files = ();   тЖР EMPTY тАФ do NOT add Info.plist here
+    runOnlyForDeploymentPostprocessing = 0;
+};
+```
+
+тЪая╕П Adding `Info.plist` to Resources causes `Multiple commands produce ... Info.plist` because `INFOPLIST_FILE` build setting already handles it.
+
+---
+
+### 11. XCConfigurationList тАФ NSE
+
+```
+NSE_CFG_LIST /* Build configuration list for PBXNativeTarget "NotificationService" */ = {
+    isa = XCConfigurationList;
+    buildConfigurations = (
+        NSE_DEBUG_CFG   /* Debug */,
+        NSE_RELEASE_CFG /* Release */,
+        NSE_PROFILE_CFG /* Profile */,
+    );
+    defaultConfigurationIsVisible = 0;
+    defaultConfigurationName = Release;
+};
+```
 
 ---
 
@@ -981,7 +1254,7 @@ The `expires` field is a Unix timestamp. `DataStore.isUrlExpired()` checks it �
 
 | Branch | Purpose |
 |--------|---------|
-| `ios-gray-template` | This template — clean gray flow, no credentials |
+| `ios-gray-template` | This template тАФ clean gray flow, no credentials |
 | `ios-gray-part` | Production gray flow for a specific app |
 | `ios-white-part` | Game only (white part), no gray flow |
 | `android-white-part` | Android game build |
@@ -995,7 +1268,7 @@ git merge ios-gray-template     # brings in gray flow code
 # Then fill credentials and test
 ```
 
-**Important:** When merging, `main.dart` from gray part MUST win (gray `main()` initializes Firebase etc.). The white part's game widget connects in `launch_page.dart → _navigateToGame()`.
+**Important:** When merging, `main.dart` from gray part MUST win (gray `main()` initializes Firebase etc.). The white part's game widget connects in `launch_page.dart тЖТ _navigateToGame()`.
 
 ---
 
@@ -1003,7 +1276,7 @@ git merge ios-gray-template     # brings in gray flow code
 
 This section lists every WebView and integration bug discovered during the LavaPeakRun integration. Check all of these when setting up a new project.
 
-### 1. Missing `_injectMediaAutoplay()` — videos don't autoplay in WebView
+### 1. Missing `_injectMediaAutoplay()` тАФ videos don't autoplay in WebView
 
 **Symptom:** Videos on the casino/betting site pause, require a tap to start, or never play at all.
 
@@ -1042,11 +1315,11 @@ This section lists every WebView and integration bug discovered during the LavaP
 
 Also ensure `WebKitWebViewControllerCreationParams` is configured with:
 ```dart
-mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},  // ← no user action required
+mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},  // тЖР no user action required
 allowsInlineMediaPlayback: true,
 ```
 
-### 2. ContentBrowser layout stretched on cold-start push tap — fixes after rotation
+### 2. ContentBrowser layout stretched on cold-start push tap тАФ fixes after rotation
 
 **Symptom:** When the app is launched from a killed state by tapping a push notification, the WebView content is stretched / buttons are oversized in portrait. Rotating to landscape and back "fixes" it.
 
@@ -1067,7 +1340,7 @@ Future.delayed(const Duration(milliseconds: 800), () {
 });
 ```
 
-### 3. White-part routes missing from root MaterialApp — crash on navigation
+### 3. White-part routes missing from root MaterialApp тАФ crash on navigation
 
 **Symptom:** After gray flow resolves to game (offline/organic user), the app crashes with:
 ```
@@ -1086,11 +1359,11 @@ routes: {
   '/level-complete': (_) => const LevelCompleteScreen(),
 },
 ```
-The exact routes depend on the white-part game structure — look at the original `app.dart` / white `MaterialApp` to find all declared routes.
+The exact routes depend on the white-part game structure тАФ look at the original `app.dart` / white `MaterialApp` to find all declared routes.
 
 ### 4. Double loading screen (SplashGate + game's LoadingScreen)
 
-**Symptom:** User sees two sequential loading animations — the gray flow's splash video, then the white game's loading video.
+**Symptom:** User sees two sequential loading animations тАФ the gray flow's splash video, then the white game's loading video.
 
 **Cause:** `_goGame()` in SplashGate navigated to `LoadingScreen` (the white part's loading screen with its own video), which plays on top of the already-finished gray loading experience.
 
@@ -1100,19 +1373,19 @@ The exact routes depend on the white-part game structure — look at the origina
 void _goGame() {
   if (_navigated) return;
   _navigated = true;
-  // Skip LoadingScreen — SplashGate already served as the loading experience.
+  // Skip LoadingScreen тАФ SplashGate already served as the loading experience.
   Navigator.of(context).pushReplacement(
     MaterialPageRoute(builder: (_) => const MainMenuScreen()),
   );
 }
 ```
 
-### 5. `GoogleService-Info.plist` not found — Firebase silently fails to init
+### 5. `GoogleService-Info.plist` not found тАФ Firebase silently fails to init
 
 **Symptom:**
 ```
 [FirebaseCore][I-COR000012] Could not locate configuration file: 'GoogleService-Info.plist'
-Firebase.initializeApp() failed — [core/not-initialized]
+Firebase.initializeApp() failed тАФ [core/not-initialized]
 ```
 
 **Cause:** The `.plist` file exists on disk at `ios/Runner/GoogleService-Info.plist` but is NOT added to the Xcode project's Copy Bundle Resources build phase. Xcode doesn't copy it into the `.app` bundle.
@@ -1125,7 +1398,7 @@ Firebase.initializeApp() failed — [core/not-initialized]
 
 Without all four, the file won't appear in the built bundle.
 
-### 6. NativeTapBridge cold-start URL never consumed — killed-app push tap goes to main menu
+### 6. NativeTapBridge cold-start URL never consumed тАФ killed-app push tap goes to main menu
 
 **Symptom:** User taps a push notification while the app is killed. App launches, shows loading screen, but lands on the main menu instead of the URL from the push. Works correctly when app is open/backgrounded.
 
@@ -1148,4 +1421,4 @@ Future<void> _boot() async {
 }
 ```
 
-If `NativeTapBridge.consumeTapUrl()` is called AFTER `pulse.bootstrap()` (which polls APNs for ~2.5s), there is a race condition: the URL might be consumed and stashed by Firebase's `getInitialMessage()` path before `consumeTapUrl()` runs. The SceneDelegate path and Firebase path use different storage keys — check both.
+If `NativeTapBridge.consumeTapUrl()` is called AFTER `pulse.bootstrap()` (which polls APNs for ~2.5s), there is a race condition: the URL might be consumed and stashed by Firebase's `getInitialMessage()` path before `consumeTapUrl()` runs. The SceneDelegate path and Firebase path use different storage keys тАФ check both.
