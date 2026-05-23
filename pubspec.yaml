@@ -2,7 +2,7 @@ name: lava_peak_run
 description: "Lava Peak Run - Volcano Clicker Game"
 publish_to: 'none'
 
-version: 1.0.0+3
+version: 1.0.1+3
 
 environment:
   sdk: ^3.11.4
