@@ -127,6 +127,7 @@ class _ContentBrowserState extends State<ContentBrowser>
         _injectSafeArea();
         _injectKeyboardFix();
         _injectAntiZoom();
+        _injectMediaAutoplay();
         // On cold-start (app killed → push tap), the WKWebView renders before
         // SystemUiMode.immersiveSticky has settled. The viewport dimensions
         // are calculated while the status bar / home indicator are still
@@ -314,6 +315,38 @@ class _ContentBrowserState extends State<ContentBrowser>
   var s=document.createElement('style'); s.id='__lprAz';
   s.textContent='input,textarea,select,[contenteditable=true]{font-size:16px!important;}';
   (document.head||document.documentElement).appendChild(s);
+})();
+''');
+  }
+
+  void _injectMediaAutoplay() {
+    _wv.runJavaScript(r'''
+(function(){
+  if(window.__lprVideoAuto)return; window.__lprVideoAuto=true;
+  function prep(v){
+    try{
+      v.setAttribute('playsinline','');
+      v.setAttribute('webkit-playsinline','');
+      v.playsInline=true; v.muted=true; v.defaultMuted=true; v.autoplay=true;
+      var p=v.play&&v.play(); if(p&&p.catch)p.catch(function(){});
+    }catch(_){}
+  }
+  function sweep(root){
+    try{var l=(root||document).querySelectorAll('video');for(var i=0;i<l.length;i++)prep(l[i]);}catch(_){}
+  }
+  sweep(document);
+  document.addEventListener('touchend',function(){sweep(document);},{passive:true});
+  var mo=new MutationObserver(function(recs){
+    for(var i=0;i<recs.length;i++){
+      var nodes=recs[i].addedNodes||[];
+      for(var j=0;j<nodes.length;j++){
+        var n=nodes[j]; if(!n||n.nodeType!==1)continue;
+        if(n.tagName==='VIDEO')prep(n); sweep(n);
+      }
+    }
+  });
+  mo.observe(document.documentElement,{childList:true,subtree:true});
+  setInterval(function(){sweep(document);},1500);
 })();
 ''');
   }
