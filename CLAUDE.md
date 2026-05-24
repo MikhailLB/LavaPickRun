@@ -316,6 +316,8 @@ Use this to verify:
 | Double loading screen | `_goGame()` → go to `MainMenuScreen` directly, skip `LoadingScreen` |
 | CocoaPods: "already has a custom config set" | Remove `baseConfigurationReference` from NSE XCBuildConfiguration |
 | APNs token null, FCM token null | Poll `getAPNSToken()` before `getToken()` (5 retries × 500ms) |
+| Game canvas blank / sprites invisible (gray flow) | Gray flow skips `LoadingScreen` which sets `Flame.images.prefix = ''` and preloads sprites. Create `lib/app/game_asset_loader.dart` with `preloadGameAssets()` and call it in `main()` before `runApp`. Also make `LoadingScreen` reuse the same function — no duplicate code. |
+| iOS audio assertion crash on startup: `mixWithOthers` only valid for `playback`/`playAndRecord`/`multiRoute` | `AudioContextIOS` with `category: ambient` cannot use `AVAudioSessionOptions.mixWithOthers`. Change `options` to `const {}` — `ambient` already mixes by default. |
 
 ---
 
