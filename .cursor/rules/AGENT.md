@@ -350,7 +350,7 @@ Future.delayed(const Duration(milliseconds: 800), () {
 | WebView — синий "рамкой" на cold-start push | `viewPadding` устарел пока immersive не применился | Микро-ротация (landscapeLeft→back) перед mount WebView; задержка 150ms+250ms; delay URL load |
 | `Nanaimo::Reader::ParseError \xEF` (pbxproj BOM) | Git на Windows добавил UTF-8 BOM | `.gitattributes`: `*.pbxproj binary` |
 | `Nanaimo::Reader::ParseError - Invalid character "\\"` (pbxproj) | PowerShell записал `\t` как буквальные символы вместо реальных табов при редактировании pbxproj через regex | `$content = $content.Replace('\t', "`t")` — прогнать по всему файлу перед коммитом. **Всегда проверять** что в pbxproj нет литеральных `\t` |
-| `Multiple commands produce .appex` | Дублирующийся `dependencies` block в Runner target | Убрать дублирование, оставить один блок |
+| `Multiple commands produce .appex` | Дублирующийся `dependencies` block в Runner target | Убрать дублирование, оставить один блок. **Причина:** PowerShell regex `$c -replace '(name = Runner;...productType...'`, `` `$1`n...dependencies... `` добавляет блок ПОСЛЕ `productType`, но оригинальный пустой `dependencies = ();` остаётся ДО `name = Runner`. Итог — два блока. **Фикс:** удалить пустой блок `dependencies = (\n\t\t\t);` который стоит ДО `name = Runner` в Runner NativeTarget |
 | `sandbox is not in sync` (Codemagic) | Manifest.lock не обновлён после pod install | `post_install`: force-copy `Podfile.lock → Manifest.lock` |
 | `CODE_SIGN_IDENTITY iPhone Distribution` (local) | Distribution certificate в pbxproj | Сменить на `"iPhone Developer"` в pbxproj |
 
