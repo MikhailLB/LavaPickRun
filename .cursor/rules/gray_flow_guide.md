@@ -1399,20 +1399,59 @@ allowsInlineMediaPlayback: true,
 
 **Cause:** `SystemUiMode.immersiveSticky` (which hides status bar + home indicator) is set in `initState()` but only takes effect on the next frame. The WKWebView starts rendering immediately, calculates viewport dimensions while the system UI elements are still visible, and the site's layout bakes in the wrong height. After rotation, the viewport is fully recalculated.
 
-**Fix:** Dispatch a synthetic `resize` event ~800ms after `onPageFinished` to force a viewport recalculation once immersive mode has settled:
+**Full fix (all 4 layers required):**
 
+1. `didChangeMetrics()` — rebuilds Flutter layout when `viewPadding` changes after immersive settles:
 ```dart
-// Inside onPageFinished callback:
+@override
+void didChangeMetrics() { if (mounted) setState(() {}); }
+```
+
+2. Micro-rotation — forces WKWebView native frame to recalculate (equivalent to user rotating):
+```dart
+Future<void> _nudgeLayout() async {
+  if (!Platform.isIOS) return;
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
+  await Future.delayed(const Duration(milliseconds: 50));
+  if (!mounted) return;
+  await SystemChrome.setPreferredOrientations([/* all 4 */]);
+}
+```
+
+3. Deferred WebView mount — do NOT mount `WebViewWidget` until after `_initColdStartSurface()`:
+```dart
+// initState:
+if (widget.coldStartPush) {
+  _initColdStartSurface().then((_) {   // immersive+150ms+nudge+250ms
+    if (!mounted) return;
+    setState(() => _viewportReady = true);
+    _controller.loadRequest(Uri.parse(widget.url));
+  });
+}
+// build:
+if (_viewportReady) Padding(padding: safe, child: WebViewWidget(...))
+else const ColoredBox(color: Colors.black),
+```
+
+4. 800ms JS resize + re-inject safe area + reload (once, cold-start only):
+```dart
 Future.delayed(const Duration(milliseconds: 800), () {
   if (!mounted) return;
+  setState(() {}); // re-read viewPadding
   _wv.runJavaScript(
     'window.dispatchEvent(new Event("resize"));'
     'if(window.visualViewport)'
     '  window.visualViewport.dispatchEvent(new Event("resize"));',
   );
-  _injectSafeArea(); // re-apply safe area shim after viewport recalc
+  _injectSafeArea();
+  if (widget.coldStartPush && !_coldReloadDone) {
+    _coldReloadDone = true;
+    _wv.reload(); // forces site to re-render with correct viewport
+  }
 });
 ```
+
+**⚠️ Safe zone pitfall:** Do NOT use `EdgeInsets.zero` as viewPadding for cold-start — this removes the bottom home indicator safe area and causes content to hide under it. Always use `MediaQuery.of(context).viewPadding` and let `didChangeMetrics` update it when immersive settles (it will naturally become 0 for top/bottom when system UI is hidden).
 
 ### 3. White-part routes missing from root MaterialApp тАФ crash on navigation
 
