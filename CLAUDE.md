@@ -43,12 +43,16 @@ The config endpoint is provided by the backend team. You give them:
 
 ### 1. Never copy code 1-to-1
 Every AI agent implementing this architecture MUST rename:
-- All class names (e.g. `SplashGate` → `VolcanoLoader`, `PulseRelay` → `FireNotify`)
-- All variable names (e.g. `_coldStartGate` → `_initBarrier`)
+- All **public** class names (e.g. `SplashGate` → `VolcanoLoader`, `PulseRelay` → `FireNotify`)
+- All **private** method names inside every gate class (e.g. `_boot` → `_launch`, `_handleFreshMode` → `_runFirstLaunch`, `_dispatchBackground` → `_sendAttribution`, `_injectSafeArea` → `_applyViewportFix`)
+- All **private** variable names (e.g. `_navigated` → `_routed`, `_vidReady` → `_videoReady`, `_offlineRouted` → `_wentOffline`)
+- All inner private widget classes (e.g. `_AcceptButton` → `_AllowButton`, `_SkipButton` → `_DismissButton`)
 - All SharedPreferences/SecureStorage keys (e.g. `lpr.gate.url` → `vb.session.link`)
 - All notification channel IDs (e.g. `lpr_push_channel` → `vb_alerts`)
 - All UserDefaults keys in SceneDelegate (e.g. `lpr_gate_tap_url` → `vb_push_tap_url`)
 - The XOR cipher seed (MUST be unique per app)
+
+**⚠️ Renaming ONLY the public class names is NOT enough.** App Store binary analysis tools can fingerprint private method names, variable names, and inner class structures. The entire internal code shape must differ between apps in the portfolio. When porting, treat the template as a reference for *logic*, not as copy-paste code.
 
 ### 2. Library versions must differ from every sibling project
 Never use the same exact version as another app in the portfolio.
