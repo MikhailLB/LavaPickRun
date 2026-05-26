@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/game_state.dart';
 import 'screens/loading_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/main_menu_screen.dart';
 import 'screens/level_select_screen.dart';
 import 'screens/game_screen.dart';
@@ -28,6 +29,7 @@ class LavaPeakRunApp extends StatelessWidget {
         initialRoute: '/loading',
         routes: {
           '/loading': (_) => const LoadingScreen(),
+          '/onboarding': (_) => const OnboardingScreen(),
           '/menu': (_) => const MainMenuScreen(),
           '/level-select': (_) => const LevelSelectScreen(),
           '/game': (_) => const GameScreen(),

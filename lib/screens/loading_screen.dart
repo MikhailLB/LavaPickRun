@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import '../services/save_service.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -120,15 +121,15 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   void _navigate() {
     _navigating = true;
-    // Stop and pause video before leaving to prevent the error flash
     _controller?.pause();
-    // Restore portrait lock before pushing so the route transition is clean
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    // Small delay lets the orientation settle before the route change
-    Future.delayed(const Duration(milliseconds: 120), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/menu');
-      }
+    Future.delayed(const Duration(milliseconds: 120), () async {
+      if (!mounted) return;
+      final onboardingDone = await SaveService.isOnboardingDone();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(
+        onboardingDone ? '/menu' : '/onboarding',
+      );
     });
   }
 

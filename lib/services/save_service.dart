@@ -5,6 +5,17 @@ class SaveService {
   static const String _coinsKey = 'coins';
   static const String _unlockedLevelsKey = 'unlocked_levels';
   static const String _upgradePrefix = 'upgrade_';
+  static const String _onboardingKey = 'onboarding_done';
+
+  static Future<bool> isOnboardingDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingKey) ?? false;
+  }
+
+  static Future<void> setOnboardingDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingKey, true);
+  }
 
   static Future<int> loadCoins() async {
     final prefs = await SharedPreferences.getInstance();
