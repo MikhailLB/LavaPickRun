@@ -9,6 +9,10 @@ class AppStateService {
   static const _keyNotifSkipUntil        = 'notification_skip_until';
   static const _keyNotifGranted          = 'notification_granted';
   static const _keyPushUrl               = 'psh_u';
+  // Tracks how many times user denied the system notification dialog.
+  // Android allows at most 2 requests before permanently blocking.
+  // After 2 denials we stop showing the promo screen forever.
+  static const _keyNotifDeniedCount      = 'notif_denied_count';
 
   late SharedPreferences _prefs;
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
@@ -42,8 +46,20 @@ class AppStateService {
   int? getNotificationSkipUntil() => _prefs.getInt(_keyNotifSkipUntil);
   Future<void> setNotificationSkipUntil(int ts) async =>
       _prefs.setInt(_keyNotifSkipUntil, ts);
+
+  int  getNotifDeniedCount()          => _prefs.getInt(_keyNotifDeniedCount) ?? 0;
+  Future<void> incrementNotifDenied() async =>
+      _prefs.setInt(_keyNotifDeniedCount, getNotifDeniedCount() + 1);
+
+  /// Returns true only when the app can meaningfully show the permission promo.
+  /// Conditions to show:
+  ///   1. Not already granted
+  ///   2. Not permanently blocked (denied < 2 times)
+  ///   3. Skip timer has expired (or was never set)
   bool shouldShowNotificationScreen() {
     if (isNotificationGranted()) return false;
+    // After 2 denials Android permanently blocks the dialog — stop showing.
+    if (getNotifDeniedCount() >= 2) return false;
     final skip = getNotificationSkipUntil();
     if (skip == null) return true;
     return DateTime.now().millisecondsSinceEpoch ~/ 1000 >= skip;

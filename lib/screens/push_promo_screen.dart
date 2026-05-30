@@ -32,9 +32,15 @@ class _PushPromoScreenState extends State<PushPromoScreen> {
     final granted = await widget.notifService.requestPermission();
     if (!mounted) return;
     if (!granted) {
-      final until = DateTime.now().millisecondsSinceEpoch ~/ 1000 +
-          AppSettings.notificationRetryDelaySeconds;
-      await widget.storage.setNotificationSkipUntil(until);
+      // Count this denial. After 2 denials Android permanently blocks the
+      // system dialog, so shouldShowNotificationScreen() will return false.
+      await widget.storage.incrementNotifDenied();
+      // Also set the 3-day skip timer for the first denial
+      if (widget.storage.getNotifDeniedCount() < 2) {
+        final until = DateTime.now().millisecondsSinceEpoch ~/ 1000 +
+            AppSettings.notificationRetryDelaySeconds;
+        await widget.storage.setNotificationSkipUntil(until);
+      }
     }
     _goToContent();
   }
