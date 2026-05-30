@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/game_state.dart';
-import 'screens/loading_screen.dart';
+import 'screens/gray_splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_menu_screen.dart';
 import 'screens/level_select_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/level_complete_screen.dart';
+import 'services/app_state_service.dart';
+import 'services/connectivity_service.dart';
+import 'services/attribution_service.dart';
+import 'services/config_service.dart';
+import 'services/notif_service.dart';
 
 class LavaPeakRunApp extends StatelessWidget {
-  const LavaPeakRunApp({super.key});
+  final AppStateService storage;
+  final ConnectivityService connectivity;
+  final AttributionService attribution;
+  final ConfigService configService;
+  final NotifService notifService;
+
+  const LavaPeakRunApp({
+    super.key,
+    required this.storage,
+    required this.connectivity,
+    required this.attribution,
+    required this.configService,
+    required this.notifService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +44,19 @@ class LavaPeakRunApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.black,
           useMaterial3: true,
         ),
-        initialRoute: '/loading',
+        home: GraySplashScreen(
+          storage:       storage,
+          connectivity:  connectivity,
+          attribution:   attribution,
+          configService: configService,
+          notifService:  notifService,
+        ),
         routes: {
-          '/loading': (_) => const LoadingScreen(),
-          '/onboarding': (_) => const OnboardingScreen(),
-          '/menu': (_) => const MainMenuScreen(),
-          '/level-select': (_) => const LevelSelectScreen(),
-          '/game': (_) => const GameScreen(),
-          '/level-complete': (_) => const LevelCompleteScreen(),
+          '/onboarding':    (_) => const OnboardingScreen(),
+          '/menu':          (_) => const MainMenuScreen(),
+          '/level-select':  (_) => const LevelSelectScreen(),
+          '/game':          (_) => const GameScreen(),
+          '/level-complete':(_) => const LevelCompleteScreen(),
         },
       ),
     );

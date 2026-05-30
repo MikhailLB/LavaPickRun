@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "122823729159",
+    "project_id": "lavapeakrun",
+    "storage_bucket": "lavapeakrun.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:122823729159:android:0af533a286483e7ba50aa2",
+        "android_client_info": {
+          "package_name": "com.lavaplay.lavapeakrun"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQnRHHSP2f2mtZZi9OYl2SJPVBouCK0Ps"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
