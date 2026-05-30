@@ -30,9 +30,9 @@ void main() {
   // WebKit version fragment for User-Agent
   _printEncoded('WebKit version', '537.36', key);
 
-  // Config endpoint — fill in when available
-  // _printEncoded('Config host', 'https://your-endpoint.com', key);
-  // _printEncoded('Config path', '/v1/config', key);
+  // Config endpoint
+  _printEncoded('Config host', 'https://lavapeakkrun.com', key);
+  _printEncoded('Config path', '/config.php', key);
 }
 
 Uint8List _deriveKey(List<int> parts) {
