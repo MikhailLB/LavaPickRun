@@ -112,10 +112,30 @@ class _ContentScreenState extends State<ContentScreen>
       if (mounted) _controller.loadRequest(Uri.parse(url));
     };
 
+    // Connectivity drop → immediate NoInternetScreen (no DNS probe delay)
     _connSub = widget.connectivity.onConnectivityChanged.listen((results) {
       if (results.every((r) => r == ConnectivityResult.none)) {
-        _checkAndShowNoInternet();
+        _showNoInternetImmediate();
       }
+    });
+  }
+
+  // Immediate no-internet: called from connectivity stream (no DNS probe).
+  void _showNoInternetImmediate() {
+    if (_showingNoInternet || !mounted) return;
+    _showingNoInternet = true;
+    _controller.currentUrl().then((cur) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (_) => NoInternetScreen(
+          retryScreenBuilder: (_) => ContentScreen(
+            url: cur ?? widget.url,
+            storage: widget.storage,
+            notifService: widget.notifService,
+            connectivity: widget.connectivity,
+          ),
+        ),
+      ));
     });
   }
 
@@ -245,11 +265,16 @@ class _ContentScreenState extends State<ContentScreen>
           fit: StackFit.expand,
           children: [
             Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).orientation == Orientation.landscape
-                    ? 0
-                    : MediaQuery.of(context).viewPadding.top,
-              ),
+              // Portrait: pad for status bar.
+              // Landscape: pad left/right for camera notch on either side.
+              padding: MediaQuery.of(context).orientation == Orientation.landscape
+                  ? EdgeInsets.only(
+                      left:  MediaQuery.of(context).viewPadding.left,
+                      right: MediaQuery.of(context).viewPadding.right,
+                    )
+                  : EdgeInsets.only(
+                      top: MediaQuery.of(context).viewPadding.top,
+                    ),
               child: WebViewWidget(controller: _controller),
             ),
             if (_isLoading)
