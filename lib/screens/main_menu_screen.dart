@@ -89,7 +89,7 @@ class MainMenuScreen extends StatelessWidget {
                                       MaterialPageRoute(
                                         builder: (_) => const WebViewScreen(
                                           url:
-                                              'https://lavapeakrun.com/privacy-policy.html',
+                                              'https://lavapeakkrun.com/privacy-policy.html',
                                           title: 'Privacy Policy',
                                         ),
                                       ),
@@ -107,7 +107,7 @@ class MainMenuScreen extends StatelessWidget {
                                       MaterialPageRoute(
                                         builder: (_) => const WebViewScreen(
                                           url:
-                                              'https://lavapeakrun.com/support.html',
+                                              'https://lavapeakkrun.com/support.html',
                                           title: 'Support',
                                         ),
                                       ),
