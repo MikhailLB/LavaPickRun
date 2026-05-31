@@ -5,36 +5,33 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'secure_agent.dart';
-import 'session_vault.dart';
+import 'lava_agent.dart';
+import 'crater_vault.dart';
 
-const _channelId    = 'lpr_push_channel';
+const _channelId    = 'ea_notify_main';
 const _channelLabel = 'Lava Peak Run Updates';
 const _iconRes      = '@drawable/ic_lava_notification';
 
 @pragma('vm:entry-point')
 Future<void> _bgMessageHandler(RemoteMessage _) async {}
 
-/// Top-level handler for taps on locally-displayed notifications when the
-/// Dart isolate isn't alive. Stashes the URL so SplashGate can consume it.
 @pragma('vm:entry-point')
-Future<void> pulseLocalTapHandler(NotificationResponse resp) async {
+Future<void> emberLocalTapHandler(NotificationResponse resp) async {
   final payload = resp.payload;
   if (payload == null || payload.isEmpty) return;
   try {
     final d = jsonDecode(payload);
     if (d is Map && d['url'] is String && (d['url'] as String).isNotEmpty) {
-      await SessionVault().stashOneShotUrl(d['url'] as String);
+      await CraterVault().stashOneShotUrl(d['url'] as String);
     }
   } catch (_) {}
 }
 
-/// FCM + flutter_local_notifications wrapper for LavaPeakRun.
-class PulseRelay {
+class EmberRelay {
   final FlutterLocalNotificationsPlugin _tray =
       FlutterLocalNotificationsPlugin();
-  final SessionVault _vault;
-  final Completer<void> _coldStartGate = Completer<void>();
+  final CraterVault _vault;
+  final Completer<void> _coldStartReady = Completer<void>();
 
   FirebaseMessaging? _fcm;
   String? _token;
@@ -45,20 +42,18 @@ class PulseRelay {
   void Function(String url)? onPushUrl;
   void Function(String token)? onTokenRefresh;
 
-  PulseRelay(this._vault);
+  EmberRelay(this._vault);
 
   String? get token => _token;
   bool get ready => _ready;
 
-  /// Resolves once the iOS cold-start getInitialMessage round-trip has run.
-  Future<void> get coldStartReady => _coldStartGate.future;
+  Future<void> get coldStartReady => _coldStartReady.future;
 
   Future<void> bootstrap() => _bootFuture ??= _doBootstrap();
 
   Future<void> _doBootstrap() async {
     try {
       _fcm = FirebaseMessaging.instance;
-      // Capture cold-start tap FIRST — before any other async work.
       await _captureColdStart();
       FirebaseMessaging.onBackgroundMessage(_bgMessageHandler);
       await _setupTray();
@@ -86,11 +81,9 @@ class PulseRelay {
       }
       _token = await _fcm!.getToken();
       _ready = true;
-      debugPrint('[LPR.PR] bootstrap OK token=${_token == null ? 'null' : 'present'}');
-    } catch (err, st) {
-      debugPrint('[LPR.PR] bootstrap error: $err\n$st');
+    } catch (_) {
     } finally {
-      if (!_coldStartGate.isCompleted) _coldStartGate.complete();
+      if (!_coldStartReady.isCompleted) _coldStartReady.complete();
     }
   }
 
@@ -104,12 +97,11 @@ class PulseRelay {
         final url = _extractUrl(msg);
         if (url != null) {
           await _vault.stashOneShotUrl(url);
-          debugPrint('[LPR.PR] cold-start url stashed');
         }
       }
     } catch (_) {}
     finally {
-      if (!_coldStartGate.isCompleted) _coldStartGate.complete();
+      if (!_coldStartReady.isCompleted) _coldStartReady.complete();
     }
   }
 
@@ -158,7 +150,7 @@ class PulseRelay {
           }
         } catch (_) {}
       },
-      onDidReceiveBackgroundNotificationResponse: pulseLocalTapHandler,
+      onDidReceiveBackgroundNotificationResponse: emberLocalTapHandler,
     );
     if (Platform.isAndroid) {
       final impl = _tray.resolvePlatformSpecificImplementation<
@@ -248,8 +240,7 @@ class PulseRelay {
       }
       await _vault.writePushConsent(ok);
       return ok;
-    } catch (err) {
-      debugPrint('[LPR.PR] askConsent error: $err');
+    } catch (_) {
       return false;
     }
   }
@@ -319,17 +310,15 @@ class PulseRelay {
   void _dispatchUrl(String url, {required String from}) {
     final cb = onPushUrl;
     if (cb != null) {
-      debugPrint('[LPR.PR] dispatch ($from) → live browser');
       cb(url);
     } else {
-      debugPrint('[LPR.PR] dispatch ($from) → stash');
       _vault.stashOneShotUrl(url);
     }
   }
 
   Future<Uint8List?> _fetchImage(String url) async {
     try {
-      final r = await secureAgent
+      final r = await lavaAgent
           .get(Uri.parse(url))
           .timeout(const Duration(seconds: 10));
       if (r.statusCode == 200) return r.bodyBytes;

@@ -1,20 +1,44 @@
-/// Decoded response from the remote gate endpoint.
-/// Accepts several alternative field names so the client works with
-/// slightly different backend conventions without code changes.
-class GateReply {
+enum CraterMode {
+  web,
+  game,
+  fresh;
+
+  String toKey() {
+    switch (this) {
+      case CraterMode.web:   return 'web';
+      case CraterMode.game:  return 'game';
+      case CraterMode.fresh: return 'fresh';
+    }
+  }
+
+  static CraterMode fromKey(String? raw) {
+    switch (raw) {
+      case 'web':
+      case 'browser':
+        return CraterMode.web;
+      case 'game':
+      case 'arcade':
+        return CraterMode.game;
+      default:
+        return CraterMode.fresh;
+    }
+  }
+}
+
+class FlowReply {
   final bool granted;
   final String? destination;
   final String? note;
   final int? expiresAt;
 
-  const GateReply._({
+  const FlowReply._({
     required this.granted,
     this.destination,
     this.note,
     this.expiresAt,
   });
 
-  factory GateReply.fromMap(Map<String, dynamic> raw) {
+  factory FlowReply.fromMap(Map<String, dynamic> raw) {
     final granted = (raw['ok'] as bool?)        ??
                     (raw['granted'] as bool?)    ??
                     (raw['accepted'] as bool?)   ??
@@ -39,7 +63,7 @@ class GateReply {
       expires = int.tryParse(ttl);
     }
 
-    return GateReply._(
+    return FlowReply._(
       granted: granted,
       destination: destination,
       note: note,
@@ -47,6 +71,6 @@ class GateReply {
     );
   }
 
-  factory GateReply.declined(String reason) =>
-      GateReply._(granted: false, note: reason);
+  factory FlowReply.declined(String reason) =>
+      FlowReply._(granted: false, note: reason);
 }

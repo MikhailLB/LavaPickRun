@@ -1,35 +1,35 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../config/gate_config.dart';
-import '../infra/pulse_relay.dart';
-import '../infra/reach_probe.dart';
-import '../infra/session_vault.dart';
-import 'content_browser.dart';
+import '../cfg/magma_config.dart';
+import '../core/ember_relay.dart';
+import '../core/thermal_probe.dart';
+import '../core/crater_vault.dart';
+import 'lava_browser.dart';
 
-/// Push permission offer screen. Shows a static branded background image
-/// (portrait or landscape) with Accept / Skip buttons.
-class PermitScreen extends StatefulWidget {
-  final SessionVault vault;
-  final PulseRelay pulse;
-  final ReachProbe probe;
+class BellPrompt extends StatefulWidget {
+  final CraterVault vault;
+  final EmberRelay pulse;
+  final ThermalProbe probe;
   final String destination;
+  final bool coldStartPush;
   final Future<void> Function(String token)? onTokenReady;
 
-  const PermitScreen({
+  const BellPrompt({
     super.key,
     required this.vault,
     required this.pulse,
     required this.probe,
     required this.destination,
+    this.coldStartPush = false,
     this.onTokenReady,
   });
 
   @override
-  State<PermitScreen> createState() => _PermitScreenState();
+  State<BellPrompt> createState() => _BellPromptState();
 }
 
-class _PermitScreenState extends State<PermitScreen>
+class _BellPromptState extends State<BellPrompt>
     with TickerProviderStateMixin {
   bool _busy = false;
   late final AnimationController _shimmer;
@@ -86,18 +86,19 @@ class _PermitScreenState extends State<PermitScreen>
 
   Future<void> _setCooldown() async {
     final until = DateTime.now().millisecondsSinceEpoch ~/ 1000 +
-        GateConfig.pushCooldownSeconds;
+        MagmaConfig.pushCooldownSeconds;
     await widget.vault.writePushCooldown(until);
   }
 
   void _openBrowser() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => ContentBrowser(
+      builder: (_) => LavaBrowser(
         destination: widget.destination,
         vault: widget.vault,
         pulse: widget.pulse,
         probe: widget.probe,
+        coldStartPush: widget.coldStartPush,
       ),
     ));
   }
@@ -107,8 +108,8 @@ class _PermitScreenState extends State<PermitScreen>
     final mq = MediaQuery.of(context);
     final landscape = mq.size.width > mq.size.height;
     final bgAsset = landscape
-        ? 'assets/Notifications/Horizontal_Notifications_Screen.webp'
-        : 'assets/Notifications/Vertical_Notifications_Screen.webp';
+        ? 'assets/Notifications/Horizontal_Notifications_Screen.png'
+        : 'assets/Notifications/Vertical_Notifications_Screen.png';
     final btnW = landscape
         ? (mq.size.width * 0.30).clamp(220.0, 360.0)
         : mq.size.width * 0.76;
@@ -129,7 +130,7 @@ class _PermitScreenState extends State<PermitScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _AcceptButton(
+                        _AllowButton(
                           width: btnW,
                           busy: _busy,
                           shimmer: _shimmer,
@@ -138,7 +139,7 @@ class _PermitScreenState extends State<PermitScreen>
                           compact: landscape,
                         ),
                         SizedBox(height: mq.size.height * 0.022),
-                        _SkipButton(onTap: _skip, compact: landscape),
+                        _PassButton(onTap: _skip, compact: landscape),
                       ],
                     ),
                   ),
@@ -152,22 +153,22 @@ class _PermitScreenState extends State<PermitScreen>
   }
 }
 
-class _AcceptButton extends StatefulWidget {
+class _AllowButton extends StatefulWidget {
   final double width;
   final bool busy;
   final bool compact;
   final AnimationController shimmer;
   final AnimationController glow;
   final VoidCallback onTap;
-  const _AcceptButton({
+  const _AllowButton({
     required this.width, required this.busy, required this.shimmer,
     required this.glow, required this.onTap, this.compact = false,
   });
   @override
-  State<_AcceptButton> createState() => _AcceptButtonState();
+  State<_AllowButton> createState() => _AllowButtonState();
 }
 
-class _AcceptButtonState extends State<_AcceptButton>
+class _AllowButtonState extends State<_AllowButton>
     with SingleTickerProviderStateMixin {
   bool _pressed = false;
   late final AnimationController _press = AnimationController(
@@ -231,15 +232,15 @@ class _AcceptButtonState extends State<_AcceptButton>
   }
 }
 
-class _SkipButton extends StatefulWidget {
+class _PassButton extends StatefulWidget {
   final VoidCallback onTap;
   final bool compact;
-  const _SkipButton({required this.onTap, this.compact = false});
+  const _PassButton({required this.onTap, this.compact = false});
   @override
-  State<_SkipButton> createState() => _SkipButtonState();
+  State<_PassButton> createState() => _PassButtonState();
 }
 
-class _SkipButtonState extends State<_SkipButton> {
+class _PassButtonState extends State<_PassButton> {
   bool _pressed = false;
   @override
   Widget build(BuildContext context) {

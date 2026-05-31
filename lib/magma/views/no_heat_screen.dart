@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../infra/reach_probe.dart';
+import '../core/thermal_probe.dart';
 
-class NoSignalScreen extends StatefulWidget {
+class NoHeatScreen extends StatefulWidget {
   final WidgetBuilder retryBuilder;
-  final ReachProbe probe;
+  final ThermalProbe probe;
 
-  const NoSignalScreen({
+  const NoHeatScreen({
     super.key,
     required this.retryBuilder,
     required this.probe,
   });
 
   @override
-  State<NoSignalScreen> createState() => _NoSignalScreenState();
+  State<NoHeatScreen> createState() => _NoHeatScreenState();
 }
 
-class _NoSignalScreenState extends State<NoSignalScreen>
+class _NoHeatScreenState extends State<NoHeatScreen>
     with SingleTickerProviderStateMixin {
   bool _busy = false;
   bool _hint = false;

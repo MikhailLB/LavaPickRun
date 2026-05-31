@@ -1,38 +1,45 @@
 import 'dart:typed_data';
 
-/// XOR-based string obfuscation for secrets stored as byte arrays.
-///
-/// Seed is unique to LavaPeakRun — different from every sibling project so
-/// byte arrays are not interchangeable between apps.
-const _seedBytes = <int>[
-  0x6C, 0x61, 0x76, 0x61, 0x72, 0x75, 0x6E, 0x2E,
-  0x67, 0x61, 0x74, 0x65, 0x2E, 0x76, 0x31,
+const _seed = <int>[
+  0x65, 0x6D, 0x62, 0x65, 0x72, 0x2F, 0x61, 0x73, 0x63, 0x65,
+  0x6E, 0x74, 0x2F, 0x76, 0x32, 0x23, 0x68, 0x65, 0x61, 0x74,
 ];
 
-Uint8List _deriveKeyStream(int size) {
-  var hash = 0x811C9DC5;
-  for (final b in _seedBytes) {
-    hash = ((hash ^ b) * 0x01000193) & 0xFFFFFFFF;
+int _mix() {
+  var h = 5381;
+  for (final b in _seed) {
+    h = ((h * 33) ^ b) & 0xFFFFFFFF;
   }
-  final out = Uint8List(size);
-  var state = hash == 0 ? 0xDEADBEEF : hash;
-  for (var i = 0; i < size; i++) {
-    state = (state * 1103515245 + 12345) & 0x7FFFFFFF;
-    out[i] = (state >> 7) & 0xFF;
-  }
-  return out;
+  return h == 0 ? 0x1A2B3C4D : h;
 }
 
-final _stream = _deriveKeyStream(64);
+int _step(int s) {
+  s &= 0xFFFFFFFF;
+  s ^= (s << 13) & 0xFFFFFFFF;
+  s ^= s >> 17;
+  s ^= (s << 5) & 0xFFFFFFFF;
+  return s & 0xFFFFFFFF;
+}
 
-/// Decode an XOR-encoded byte list back to its plaintext string.
-/// Use `tool/encode_creds.dart` to produce byte arrays for new values.
+void _fill(int n, Uint8List a, Uint8List b) {
+  var s = _mix();
+  for (var i = 0; i < n; i++) {
+    s = _step(s);
+    a[i] = s & 0xFF;
+    s = _step(s);
+    b[i] = (s >> 8) & 0xFF;
+  }
+}
+
 String unmask(List<int> raw) {
-  if (raw.isEmpty) return '';
-  final sn = _stream.length;
-  final out = Uint8List(raw.length);
-  for (var i = 0; i < raw.length; i++) {
-    out[i] = raw[i] ^ _stream[i % sn];
+  final n = raw.length;
+  if (n == 0) return '';
+  final a = Uint8List(n);
+  final b = Uint8List(n);
+  _fill(n, a, b);
+  final out = Uint8List(n);
+  for (var i = 0; i < n; i++) {
+    out[i] = (((raw[i] - b[i]) & 0xFF) ^ a[i]) & 0xFF;
   }
   return String.fromCharCodes(out);
 }

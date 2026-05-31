@@ -1,19 +1,14 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/session_mode.dart';
+import '../types/flow_models.dart';
 
-/// Persistence layer for the gate flow.
-/// Non-sensitive flags → SharedPreferences (fast, readable).
-/// Sensitive values (URLs, push tokens) → FlutterSecureStorage (encrypted).
-class SessionVault {
-  // SharedPreferences keys — unique lpr.* prefix
-  static const _kMode       = 'lpr.gate.mode';
-  static const _kPushCooldown = 'lpr.gate.push.cooldown';
-  static const _kPushConsent  = 'lpr.gate.push.consent';
-  // SecureStorage keys
-  static const _kSavedUrl   = 'lpr.gate.url';
-  static const _kUrlTtl     = 'lpr.gate.url.ttl';
-  static const _kOneShotUrl = 'lpr.gate.push.oneshot';
+class CraterVault {
+  static const _kMode        = 'ea.mode';
+  static const _kPushCooldown = 'ea.push.cd';
+  static const _kPushConsent  = 'ea.push.ok';
+  static const _kSavedUrl    = 'ea.url';
+  static const _kUrlTtl      = 'ea.url.ts';
+  static const _kOneShotUrl  = 'ea.push.shot';
 
   late SharedPreferences _prefs;
   final FlutterSecureStorage _safe = const FlutterSecureStorage();
@@ -22,9 +17,9 @@ class SessionVault {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  SessionMode readMode() => SessionMode.fromKey(_prefs.getString(_kMode));
+  CraterMode readMode() => CraterMode.fromKey(_prefs.getString(_kMode));
 
-  Future<void> writeMode(SessionMode m) async =>
+  Future<void> writeMode(CraterMode m) async =>
       _prefs.setString(_kMode, m.toKey());
 
   Future<String?> readSavedUrl() async {

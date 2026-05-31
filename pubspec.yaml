@@ -7,32 +7,23 @@ version: 1.1.0+8
 environment:
   sdk: ^3.11.4
 
-# NOTE: This project deliberately avoids the common drop-in template packages
-# (state-management, font-fetcher, animation-DSL and audio helpers) and instead
-# uses the Flutter framework primitives directly. See lib/state, lib/ui/theme,
-# lib/engine and lib/feedback for the hand-written replacements.
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-  # White (game) layer
   video_player: ^2.9.2
   shared_preferences: ^2.3.3
   webview_flutter: ^4.10.0
 
-  # Gray gate layer — attribution, push, WebView gate
   appsflyer_sdk: ^6.16.2
   app_tracking_transparency: 2.0.5
   firebase_core: ^3.15.0
   firebase_messaging: ^15.2.6
   firebase_app_check: ^0.3.2+8
   flutter_local_notifications: ^17.2.4
-  connectivity_plus: ^6.1.5
   http: ^1.5.0
-  device_info_plus: ^11.5.0
   flutter_secure_storage: ^9.2.4
-  package_info_plus: ^8.3.0
   webview_flutter_android: ^4.3.4
   webview_flutter_wkwebview: ^3.22.0
   url_launcher: ^6.3.2
@@ -84,17 +75,7 @@ flutter:
     - assets/Loading/Loading_Bar_Half.webp
     - assets/Loading/Loading_Bar_Almost.webp
     - assets/Loading/Loading_Bar_Full.webp
-    - assets/Notifications/Horizontal_Notifications_Screen.webp
-    - assets/Notifications/Vertical_Notifications_Screen.webp
+    - assets/Notifications/Horizontal_Notifications_Screen.png
+    - assets/Notifications/Vertical_Notifications_Screen.png
     - assets/Nowifi/Horizontal_Nowifi_Screen.webp
     - assets/Nowifi/Vertical_Nowifi_Screen.webp
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/Logo_white.webp"
-  adaptive_icon_background: "#1A0500"
-  adaptive_icon_foreground: "assets/Logo_white.webp"
-  web:
-    generate: false
