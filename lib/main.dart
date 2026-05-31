@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'app.dart';
-import 'models/upgrade.dart';
-import 'services/settings_service.dart';
 
-void main() async {
+import 'app/ember_app.dart';
+import 'data/progress_store.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  UpgradeDefinition.init();
-  await SettingsService.initialize();
+  await ProgressStore.init();
 
-  // Lock to portrait — loading screen will temporarily override this
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
-
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -22,5 +19,5 @@ void main() async {
     ),
   );
 
-  runApp(const LavaPeakRunApp());
+  runApp(const EmberApp());
 }

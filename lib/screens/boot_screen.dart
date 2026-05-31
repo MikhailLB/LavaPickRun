@@ -3,22 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key});
+import '../app/routes.dart';
+
+/// Animated splash/boot screen. Plays the orientation-appropriate loading clip
+/// while a four-stage progress bar fills, then hands off to the home screen.
+class BootScreen extends StatefulWidget {
+  const BootScreen({super.key});
 
   @override
-  State<LoadingScreen> createState() => _LoadingScreenState();
+  State<BootScreen> createState() => _BootScreenState();
 }
 
-class _LoadingScreenState extends State<LoadingScreen> {
+class _BootScreenState extends State<BootScreen> {
   VideoPlayerController? _controller;
   bool _videoReady = false;
   int _barStage = 0;
   bool _navigating = false;
   bool _disposed = false;
   Orientation? _lastOrientation;
-
-  // Track which controller is "current" to avoid races
   int _initGeneration = 0;
 
   static const List<String> _barAssets = [
@@ -39,7 +41,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Do not reinitialize if we're already navigating away
     if (_navigating || _disposed) return;
     final orientation = MediaQuery.of(context).orientation;
     if (_lastOrientation != orientation) {
@@ -50,19 +51,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   Future<void> _initVideo(Orientation orientation) async {
     final myGen = ++_initGeneration;
-
-    // Snapshot and null out the old controller before async work
     final oldController = _controller;
     _controller = null;
-
-    if (mounted && !_disposed) {
-      setState(() => _videoReady = false);
-    }
+    if (mounted && !_disposed) setState(() => _videoReady = false);
 
     final asset = orientation == Orientation.portrait
         ? 'assets/Loading/Vertical_Loading_Screen.mp4'
         : 'assets/Loading/Horizontal_Loading_Screen.mp4';
-
     final controller = VideoPlayerController.asset(asset);
 
     try {
@@ -72,7 +67,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
       return;
     }
 
-    // Stale check — a newer init started after us
     if (myGen != _initGeneration || _navigating || _disposed) {
       controller.dispose();
       await oldController?.dispose();
@@ -82,15 +76,12 @@ class _LoadingScreenState extends State<LoadingScreen> {
     controller.setLooping(true);
     controller.setVolume(0);
     await controller.play();
-
     _controller = controller;
 
     if (mounted && !_disposed && myGen == _initGeneration) {
       setState(() => _videoReady = true);
       _startBarProgress();
     }
-
-    // Safe to dispose the old one now that the new one is playing
     await oldController?.dispose();
   }
 
@@ -99,35 +90,26 @@ class _LoadingScreenState extends State<LoadingScreen> {
       t.cancel();
     }
     _timers.clear();
-
     if (mounted && !_disposed) setState(() => _barStage = 0);
 
-    _timers.add(Timer(const Duration(milliseconds: 900), () {
-      if (mounted && !_disposed) setState(() => _barStage = 1);
-    }));
-    _timers.add(Timer(const Duration(milliseconds: 1900), () {
-      if (mounted && !_disposed) setState(() => _barStage = 2);
-    }));
-    _timers.add(Timer(const Duration(milliseconds: 2900), () {
-      if (mounted && !_disposed) setState(() => _barStage = 3);
-    }));
+    _timers.add(Timer(const Duration(milliseconds: 900),
+        () => mounted && !_disposed ? setState(() => _barStage = 1) : null));
+    _timers.add(Timer(const Duration(milliseconds: 1900),
+        () => mounted && !_disposed ? setState(() => _barStage = 2) : null));
+    _timers.add(Timer(const Duration(milliseconds: 2900),
+        () => mounted && !_disposed ? setState(() => _barStage = 3) : null));
     _timers.add(Timer(const Duration(milliseconds: 3500), () {
-      if (!_navigating && !_disposed && mounted) {
-        _navigate();
-      }
+      if (!_navigating && !_disposed && mounted) _navigate();
     }));
   }
 
   void _navigate() {
     _navigating = true;
-    // Stop and pause video before leaving to prevent the error flash
     _controller?.pause();
-    // Restore portrait lock before pushing so the route transition is clean
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    // Small delay lets the orientation settle before the route change
     Future.delayed(const Duration(milliseconds: 120), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/menu');
+        Navigator.of(context).pushReplacementNamed(Routes.home);
       }
     });
   }
@@ -138,7 +120,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
     for (final t in _timers) {
       t.cancel();
     }
-    // Pause first to avoid error-state flash during disposal
     _controller?.pause();
     _controller?.dispose();
     _controller = null;
@@ -157,8 +138,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Video background — only render when ready to avoid the error widget
-          if (_videoReady && _controller != null && _controller!.value.isInitialized)
+          if (_videoReady &&
+              _controller != null &&
+              _controller!.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,
@@ -170,21 +152,17 @@ class _LoadingScreenState extends State<LoadingScreen> {
               ),
             )
           else
-            Container(color: Colors.black),
-
-          // Loading bar — portrait: 24px from bottom; landscape: 16px, narrower
+            const ColoredBox(color: Colors.black),
           if (_videoReady)
             Positioned(
               left: 0,
               right: 0,
               bottom: isLandscape ? 16 : 24,
               child: Center(
-                child: _AnimatedLoadingBar(
+                child: _ProgressBar(
                   stage: _barStage,
                   assets: _barAssets,
-                  width: isLandscape
-                      ? size.width * 0.28
-                      : size.width * 0.72,
+                  width: isLandscape ? size.width * 0.28 : size.width * 0.72,
                 ),
               ),
             ),
@@ -194,52 +172,43 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 }
 
-class _AnimatedLoadingBar extends StatefulWidget {
+class _ProgressBar extends StatefulWidget {
+  const _ProgressBar(
+      {required this.stage, required this.assets, required this.width});
+
   final int stage;
   final List<String> assets;
   final double width;
 
-  const _AnimatedLoadingBar({
-    required this.stage,
-    required this.assets,
-    required this.width,
-  });
-
   @override
-  State<_AnimatedLoadingBar> createState() => _AnimatedLoadingBarState();
+  State<_ProgressBar> createState() => _ProgressBarState();
 }
 
-class _AnimatedLoadingBarState extends State<_AnimatedLoadingBar>
+class _ProgressBarState extends State<_ProgressBar>
     with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fade;
-  int _displayedStage = 0;
-  int _nextStage = 0;
+  late final AnimationController _fade;
+  int _displayed = 0;
+  int _next = 0;
 
   @override
   void initState() {
     super.initState();
-    _displayedStage = widget.stage;
-    _nextStage = widget.stage;
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    _fade = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
-    );
+    _displayed = widget.stage;
+    _next = widget.stage;
+    _fade = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
   }
 
   @override
-  void didUpdateWidget(_AnimatedLoadingBar old) {
+  void didUpdateWidget(_ProgressBar old) {
     super.didUpdateWidget(old);
-    if (widget.stage != _nextStage) {
-      _nextStage = widget.stage;
-      _fadeController.forward(from: 0).then((_) {
+    if (widget.stage != _next) {
+      _next = widget.stage;
+      _fade.forward(from: 0).then((_) {
         if (mounted) {
           setState(() {
-            _displayedStage = _nextStage;
-            _fadeController.value = 1.0;
+            _displayed = _next;
+            _fade.value = 1.0;
           });
         }
       });
@@ -248,7 +217,7 @@ class _AnimatedLoadingBarState extends State<_AnimatedLoadingBar>
 
   @override
   void dispose() {
-    _fadeController.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
@@ -259,22 +228,13 @@ class _AnimatedLoadingBarState extends State<_AnimatedLoadingBar>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Image.asset(
-            widget.assets[_displayedStage],
-            width: widget.width,
-            fit: BoxFit.contain,
-          ),
-          if (_nextStage != _displayedStage)
-            AnimatedBuilder(
-              animation: _fade,
-              builder: (context, child) => Opacity(
-                opacity: _fade.value,
-                child: Image.asset(
-                  widget.assets[_nextStage],
-                  width: widget.width,
-                  fit: BoxFit.contain,
-                ),
-              ),
+          Image.asset(widget.assets[_displayed],
+              width: widget.width, fit: BoxFit.contain),
+          if (_next != _displayed)
+            FadeTransition(
+              opacity: CurvedAnimation(parent: _fade, curve: Curves.easeInOut),
+              child: Image.asset(widget.assets[_next],
+                  width: widget.width, fit: BoxFit.contain),
             ),
         ],
       ),
