@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/home_screen.dart';
+import '../../app/ember_app.dart';
 import '../core/eruption_signal.dart';
 import '../core/volcano_tap.dart';
 import '../core/ember_relay.dart';
@@ -307,9 +307,10 @@ class _CraterBootState extends State<CraterBoot> {
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+    // Replace the entire widget tree with the white game.
+    // runApp() is safe to call again in Flutter — it detaches the gray
+    // MaterialApp and mounts EmberApp (with its own MaterialApp + GameScope).
+    runApp(const EmberApp());
   }
 
   void _goOffline({required bool fresh}) {
