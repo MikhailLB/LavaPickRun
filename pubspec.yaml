@@ -69,13 +69,13 @@ flutter:
     - assets/Assets/6_volcano_asset.webp
     - assets/Assets/7_bg_asset.webp
     - assets/Assets/7_volcano_asset.webp
-    - assets/Loading/Horizontal_Loading_Screen.mp4
-    - assets/Loading/Vertical_Loading_Screen.mp4
-    - assets/Loading/Loading_Bar_Empty.webp
-    - assets/Loading/Loading_Bar_Half.webp
-    - assets/Loading/Loading_Bar_Almost.webp
-    - assets/Loading/Loading_Bar_Full.webp
-    - assets/Notifications/Horizontal_Notifications_Screen.png
-    - assets/Notifications/Vertical_Notifications_Screen.png
-    - assets/Nowifi/Horizontal_Nowifi_Screen.webp
-    - assets/Nowifi/Vertical_Nowifi_Screen.webp
+    - assets/ascent_boot/boot_landscape.mp4
+    - assets/ascent_boot/boot_portrait.mp4
+    - assets/ascent_boot/gauge_0.webp
+    - assets/ascent_boot/gauge_1.webp
+    - assets/ascent_boot/gauge_2.webp
+    - assets/ascent_boot/gauge_3.webp
+    - assets/ascent_bell/bell_landscape.png
+    - assets/ascent_bell/bell_portrait.png
+    - assets/ascent_offline/offline_landscape.webp
+    - assets/ascent_offline/offline_portrait.webp

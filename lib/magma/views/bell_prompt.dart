@@ -108,8 +108,8 @@ class _BellPromptState extends State<BellPrompt>
     final mq = MediaQuery.of(context);
     final landscape = mq.size.width > mq.size.height;
     final bgAsset = landscape
-        ? 'assets/Notifications/Horizontal_Notifications_Screen.png'
-        : 'assets/Notifications/Vertical_Notifications_Screen.png';
+        ? 'assets/ascent_bell/bell_landscape.png'
+        : 'assets/ascent_bell/bell_portrait.png';
     final btnW = landscape
         ? (mq.size.width * 0.30).clamp(220.0, 360.0)
         : mq.size.width * 0.76;

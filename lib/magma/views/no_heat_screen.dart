@@ -67,8 +67,8 @@ class _NoHeatScreenState extends State<NoHeatScreen>
     final c = MediaQuery.of(context);
     final landscape = c.size.width > c.size.height;
     final bgAsset = landscape
-        ? 'assets/Nowifi/Horizontal_Nowifi_Screen.webp'
-        : 'assets/Nowifi/Vertical_Nowifi_Screen.webp';
+        ? 'assets/ascent_offline/offline_landscape.webp'
+        : 'assets/ascent_offline/offline_portrait.webp';
     final btnW = landscape
         ? (c.size.width * 0.24).clamp(200.0, 340.0)
         : (c.size.width * 0.52).clamp(180.0, 300.0);

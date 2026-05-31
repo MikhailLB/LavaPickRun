@@ -62,8 +62,8 @@ class _CraterBootState extends State<CraterBoot> {
 
   Future<void> _switchVideo(Orientation o) async {
     final asset = o == Orientation.landscape
-        ? 'assets/Loading/Horizontal_Loading_Screen.mp4'
-        : 'assets/Loading/Vertical_Loading_Screen.mp4';
+        ? 'assets/ascent_boot/boot_landscape.mp4'
+        : 'assets/ascent_boot/boot_portrait.mp4';
     final old = _vid;
     final ctrl = VideoPlayerController.asset(asset);
     try {
@@ -330,9 +330,9 @@ class _CraterBootState extends State<CraterBoot> {
 
   String _barAsset() {
     switch (_bar) {
-      case _LoadStep.empty:  return 'assets/Loading/Loading_Bar_Empty.webp';
-      case _LoadStep.midway: return 'assets/Loading/Loading_Bar_Half.webp';
-      case _LoadStep.done:   return 'assets/Loading/Loading_Bar_Full.webp';
+      case _LoadStep.empty:  return 'assets/ascent_boot/gauge_0.webp';
+      case _LoadStep.midway: return 'assets/ascent_boot/gauge_1.webp';
+      case _LoadStep.done:   return 'assets/ascent_boot/gauge_3.webp';
     }
   }
 

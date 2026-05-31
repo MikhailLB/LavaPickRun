@@ -24,10 +24,10 @@ class _BootScreenState extends State<BootScreen> {
   int _initGeneration = 0;
 
   static const List<String> _barAssets = [
-    'assets/Loading/Loading_Bar_Empty.webp',
-    'assets/Loading/Loading_Bar_Half.webp',
-    'assets/Loading/Loading_Bar_Almost.webp',
-    'assets/Loading/Loading_Bar_Full.webp',
+    'assets/ascent_boot/gauge_0.webp',
+    'assets/ascent_boot/gauge_1.webp',
+    'assets/ascent_boot/gauge_2.webp',
+    'assets/ascent_boot/gauge_3.webp',
   ];
 
   final List<Timer> _timers = [];
@@ -56,8 +56,8 @@ class _BootScreenState extends State<BootScreen> {
     if (mounted && !_disposed) setState(() => _videoReady = false);
 
     final asset = orientation == Orientation.portrait
-        ? 'assets/Loading/Vertical_Loading_Screen.mp4'
-        : 'assets/Loading/Horizontal_Loading_Screen.mp4';
+        ? 'assets/ascent_boot/boot_portrait.mp4'
+        : 'assets/ascent_boot/boot_landscape.mp4';
     final controller = VideoPlayerController.asset(asset);
 
     try {
