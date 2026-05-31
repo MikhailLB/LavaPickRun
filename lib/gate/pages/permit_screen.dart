@@ -128,7 +128,6 @@ class _PermitScreenState extends State<PermitScreen>
                     left: 0, right: 0, bottom: bottomGap,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _AcceptButton(
                           width: btnW,
@@ -139,7 +138,7 @@ class _PermitScreenState extends State<PermitScreen>
                           compact: landscape,
                         ),
                         SizedBox(height: mq.size.height * 0.022),
-                        Center(child: _SkipButton(onTap: _skip, compact: landscape)),
+                        _SkipButton(onTap: _skip, compact: landscape),
                       ],
                     ),
                   ),
