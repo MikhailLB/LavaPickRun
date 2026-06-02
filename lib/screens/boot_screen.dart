@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 import '../app/routes.dart';
+import '../data/progress_store.dart';
 
 /// Animated splash/boot screen. Plays the orientation-appropriate loading clip
 /// while a four-stage progress bar fills, then hands off to the home screen.
@@ -108,9 +109,10 @@ class _BootScreenState extends State<BootScreen> {
     _controller?.pause();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     Future.delayed(const Duration(milliseconds: 120), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(Routes.home);
-      }
+      if (!mounted) return;
+      // First launch: show the tutorial before the menu.
+      final next = ProgressStore.tutorialSeen ? Routes.home : Routes.tutorial;
+      Navigator.of(context).pushReplacementNamed(next);
     });
   }
 

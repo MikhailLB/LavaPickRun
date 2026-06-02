@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/routes.dart';
 import '../../engine/ascent_engine.dart';
 import '../../state/store.dart';
 import '../theme.dart';
@@ -52,15 +53,23 @@ class _SettingsSheet extends StatelessWidget {
                     value: engine.hapticsEnabled,
                     onChanged: engine.setHaptics,
                   ),
-                  const SizedBox(height: 18),
-                  const SectionLabel('How to climb'),
-                  Text(
-                    'Tap to strike when the marker crosses the gold band. '
-                    'Land PERFECT hits to build momentum, but pace yourself — '
-                    'too many strikes overheat the core. When the ring flares '
-                    'red the volcano is erupting: hold, and never strike. '
-                    'Lose all your stability and the climb ends.',
-                    style: AppText.body(13),
+                  const SizedBox(height: 10),
+                  _ToggleRow(
+                    icon: Icons.volume_up_rounded,
+                    label: 'Sound',
+                    value: engine.soundEnabled,
+                    onChanged: engine.setSound,
+                  ),
+                  const SizedBox(height: 16),
+                  EmberButton(
+                    label: 'How to Play',
+                    icon: Icons.help_outline_rounded,
+                    compact: true,
+                    onTap: () {
+                      final nav = Navigator.of(context);
+                      nav.pop();
+                      nav.pushNamed(Routes.tutorial);
+                    },
                   ),
                 ],
               );

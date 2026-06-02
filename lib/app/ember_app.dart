@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../engine/ascent_engine.dart';
+import '../screens/achievements_screen.dart';
 import '../screens/ascent_screen.dart';
 import '../screens/boot_screen.dart';
+import '../screens/codex_screen.dart';
+import '../screens/customize_screen.dart';
+import '../screens/flow_screen.dart';
 import '../screens/forge_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/peak_map_screen.dart';
+import '../screens/stats_screen.dart';
 import '../screens/summit_screen.dart';
+import '../screens/tutorial_screen.dart';
 import '../state/store.dart';
 import '../ui/theme.dart';
 import 'routes.dart';
@@ -56,6 +62,18 @@ class _EmberAppState extends State<EmberApp> {
         page = const SummitScreen();
       case Routes.forge:
         page = const ForgeScreen();
+      case Routes.flow:
+        page = const FlowScreen();
+      case Routes.codex:
+        page = const CodexScreen();
+      case Routes.achievements:
+        page = const AchievementsScreen();
+      case Routes.stats:
+        page = const StatsScreen();
+      case Routes.customize:
+        page = const CustomizeScreen();
+      case Routes.tutorial:
+        page = const TutorialScreen();
       case Routes.boot:
       default:
         page = const BootScreen();

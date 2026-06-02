@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/routes.dart';
 import '../data/peaks.dart';
 import '../data/progress_store.dart';
+import '../data/skins.dart';
 import '../engine/ascent_engine.dart';
 import '../engine/models.dart';
 import '../state/store.dart';
@@ -63,9 +64,12 @@ class _HomeScreenState extends State<HomeScreen>
                       padding: const EdgeInsets.fromLTRB(20, 10, 12, 0),
                       child: Row(
                         children: [
-                          Text('EMBER ASCENT',
-                              style: AppText.label(13,
-                                  color: Palette.gold, spacing: 4)),
+                          ValueListenableBuilder<AppSkin>(
+                            valueListenable: appSkin,
+                            builder: (context, skin, _) => Text('EMBER ASCENT',
+                                style: AppText.label(13,
+                                    color: skin.accent, spacing: 4)),
+                          ),
                           const Spacer(),
                           RoundIconButton(
                             icon: Icons.settings,
@@ -78,26 +82,30 @@ class _HomeScreenState extends State<HomeScreen>
                     // ── Hero summit ─────────────────────────────────
                     Expanded(
                       child: Center(
-                        child: AnimatedBuilder(
-                          animation: _glow,
-                          builder: (context, child) {
-                            final t = _glow.value;
-                            return Container(
-                              width: size.width * 0.78,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Palette.emberHot
-                                        .withValues(alpha: 0.25 + t * 0.2),
-                                    blurRadius: 60 + t * 30,
-                                    spreadRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: child,
-                            );
-                          },
+                        child: ValueListenableBuilder<AppSkin>(
+                          valueListenable: appSkin,
+                          builder: (context, skin, child) => AnimatedBuilder(
+                            animation: _glow,
+                            builder: (context, child) {
+                              final t = _glow.value;
+                              return Container(
+                                width: size.width * 0.78,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: skin.glow
+                                          .withValues(alpha: 0.25 + t * 0.2),
+                                      blurRadius: 60 + t * 30,
+                                      spreadRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: child,
+                              );
+                            },
+                            child: child,
+                          ),
                           child: Image.asset(
                             Peaks.all.last.sprite,
                             width: size.width * 0.66,
@@ -143,26 +151,67 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     const SizedBox(height: 14),
 
-                    // ── Menu rows ───────────────────────────────────
+                    // ── Menu ────────────────────────────────────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
+                      child: _MenuRow(
+                        icon: Icons.play_arrow_rounded,
+                        title: 'CLIMB',
+                        subtitle: 'Pick a route and begin the ascent',
+                        primary: true,
+                        onTap: () =>
+                            Navigator.of(context).pushNamed(Routes.peaks),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        alignment: WrapAlignment.center,
                         children: [
-                          _MenuRow(
-                            icon: Icons.play_arrow_rounded,
-                            title: 'CLIMB',
-                            subtitle: 'Pick a route and begin the ascent',
-                            primary: true,
+                          _FeatureTile(
+                            icon: Icons.water_drop_rounded,
+                            label: 'Lava Flow',
+                            width: (size.width - 40 - 20) / 3,
                             onTap: () =>
-                                Navigator.of(context).pushNamed(Routes.peaks),
+                                Navigator.of(context).pushNamed(Routes.flow),
                           ),
-                          const SizedBox(height: 10),
-                          _MenuRow(
+                          _FeatureTile(
                             icon: Icons.handyman,
-                            title: 'FORGE',
-                            subtitle: 'Spend embers to sharpen your gear',
+                            label: 'Forge',
+                            width: (size.width - 40 - 20) / 3,
                             onTap: () =>
                                 Navigator.of(context).pushNamed(Routes.forge),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.menu_book_rounded,
+                            label: 'Codex',
+                            width: (size.width - 40 - 20) / 3,
+                            onTap: () =>
+                                Navigator.of(context).pushNamed(Routes.codex),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.emoji_events_rounded,
+                            label: 'Awards',
+                            width: (size.width - 40 - 20) / 3,
+                            onTap: () => Navigator.of(context)
+                                .pushNamed(Routes.achievements),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.insights_rounded,
+                            label: 'Stats',
+                            width: (size.width - 40 - 20) / 3,
+                            onTap: () =>
+                                Navigator.of(context).pushNamed(Routes.stats),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.palette_rounded,
+                            label: 'Customize',
+                            width: (size.width - 40 - 20) / 3,
+                            onTap: () => Navigator.of(context)
+                                .pushNamed(Routes.customize),
                           ),
                         ],
                       ),
@@ -266,6 +315,63 @@ class _StatCard extends StatelessWidget {
           Text(label,
               style: AppText.label(9, color: Palette.ember, spacing: 1.5)),
         ],
+      ),
+    );
+  }
+}
+
+class _FeatureTile extends StatefulWidget {
+  const _FeatureTile({
+    required this.icon,
+    required this.label,
+    required this.width,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final double width;
+  final VoidCallback onTap;
+
+  @override
+  State<_FeatureTile> createState() => _FeatureTileState();
+}
+
+class _FeatureTileState extends State<_FeatureTile> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) {
+        setState(() => _down = false);
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _down ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 90),
+        child: Container(
+          width: widget.width,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Palette.ember.withValues(alpha: 0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, color: Palette.gold, size: 24),
+              const SizedBox(height: 6),
+              Text(widget.label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.label(9, color: Palette.cream, spacing: 1)),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 
+import '../data/codex.dart';
 import '../data/gear_catalog.dart';
 import '../data/peaks.dart';
 import '../data/progress_store.dart';
@@ -51,6 +52,14 @@ class AscentEngine extends ChangeNotifier {
   int _maxCombo = 0;
   int _burns = 0;
   int _starsEarned = 0;
+
+  // Per-run strike tally (folded into lifetime stats at the end of a run).
+  int _perfectCount = 0;
+  int _goodCount = 0;
+  int _weakCount = 0;
+  int _perfectStreak = 0;
+  int _bestStreak = 0;
+
   final List<StrikeFlash> _flashes = [];
   int _flashId = 0;
 
@@ -68,6 +77,10 @@ class AscentEngine extends ChangeNotifier {
   int get maxCombo => _maxCombo;
   int get burns => _burns;
   int get starsEarned => _starsEarned;
+  int get perfectCount => _perfectCount;
+  int get goodCount => _goodCount;
+  int get weakCount => _weakCount;
+  int get bestStreakThisRun => _bestStreak;
   int get comboGoal => _peak.comboGoal;
   List<StrikeFlash> get flashes => List.unmodifiable(_flashes);
 
@@ -132,6 +145,7 @@ class AscentEngine extends ChangeNotifier {
       ..clear()
       ..addAll(ProgressStore.allGearTiers());
     Feedback.enabled = ProgressStore.hapticsEnabled;
+    Feedback.soundEnabled = ProgressStore.soundEnabled;
     notifyListeners();
   }
 
@@ -154,6 +168,11 @@ class AscentEngine extends ChangeNotifier {
     _maxCombo = 0;
     _burns = 0;
     _starsEarned = 0;
+    _perfectCount = 0;
+    _goodCount = 0;
+    _weakCount = 0;
+    _perfectStreak = 0;
+    _bestStreak = 0;
     _flashes.clear();
     notifyListeners();
   }
@@ -263,13 +282,20 @@ class AscentEngine extends ChangeNotifier {
       base = _peak.ascentPerPerfect;
       _momentum++;
       if (_momentum > _maxCombo) _maxCombo = _momentum;
+      _perfectCount++;
+      _perfectStreak++;
+      if (_perfectStreak > _bestStreak) _bestStreak = _perfectStreak;
     } else if (d <= _peak.goodBand) {
       quality = StrikeQuality.good;
       base = _peak.ascentPerPerfect * 0.45;
+      _goodCount++;
+      _perfectStreak = 0;
       // momentum preserved but not advanced
     } else {
       quality = StrikeQuality.weak;
       base = _peak.ascentPerPerfect * 0.12;
+      _weakCount++;
+      _perfectStreak = 0;
       _momentum = 0;
     }
 
@@ -355,6 +381,8 @@ class AscentEngine extends ChangeNotifier {
       _highestPeak = next;
       ProgressStore.setHighestPeak(next);
     }
+    Feedback.summit();
+    _persistRunOutcome(summited: true);
     notifyListeners();
   }
 
@@ -362,7 +390,73 @@ class AscentEngine extends ChangeNotifier {
     _phase = RunPhase.collapsed;
     ProgressStore.setEmbers(_embers);
     ProgressStore.setBestAscent(_peak.index, (_ascent * 100).round());
+    _persistRunOutcome(summited: false);
     notifyListeners();
+  }
+
+  /// Folds the run into lifetime stats, unlocks the peak's codex card on a
+  /// summit, then evaluates achievements. Fire-and-forget — never blocks the UI.
+  Future<void> _persistRunOutcome({required bool summited}) async {
+    await ProgressStore.recordRun(
+      perfect: _perfectCount,
+      good: _goodCount,
+      weak: _weakCount,
+      embersEarned: _earnedThisRun,
+      bestCombo: _maxCombo,
+      summited: summited,
+    );
+    if (summited) {
+      final idx =
+          (ProgressStore.summits - 1).clamp(0, Codex.all.length - 1);
+      await ProgressStore.unlockCodex(Codex.all[idx].id);
+    }
+    _newlyUnlocked = await _evaluateAchievements(flawless: summited && _burns == 0);
+    if (_newlyUnlocked.isNotEmpty) notifyListeners();
+  }
+
+  List<String> _newlyUnlocked = const [];
+  List<String> takeNewlyUnlocked() {
+    final v = _newlyUnlocked;
+    _newlyUnlocked = const [];
+    return v;
+  }
+
+  Future<List<String>> _evaluateAchievements({required bool flawless}) async {
+    final newly = <String>[];
+    Future<void> chk(String id, bool cond) async {
+      if (cond && await ProgressStore.unlockAchievement(id)) newly.add(id);
+    }
+
+    final allGear = GearCatalog.all.every((g) => gearTier(g.id) > 0);
+    var anyTriple = false;
+    var anyAllDiff = false;
+    for (var p = 0; p < Peaks.count; p++) {
+      for (final dd in Difficulty.values) {
+        if (ProgressStore.stars(p, dd) >= 3) anyTriple = true;
+      }
+      if (Difficulty.values
+          .every((dd) => ProgressStore.stars(p, dd) > 0)) {
+        anyAllDiff = true;
+      }
+    }
+
+    await chk('first_summit', ProgressStore.summits >= 1);
+    await chk('conqueror_normal',
+        ProgressStore.peaksClearedOn(Difficulty.normal) >= Peaks.count);
+    await chk('conqueror_hard',
+        ProgressStore.peaksClearedOn(Difficulty.hard) >= Peaks.count);
+    await chk('inferno_climber',
+        ProgressStore.peaksClearedOn(Difficulty.inferno) >= 1);
+    await chk('flawless', flawless);
+    await chk('combo_master', ProgressStore.bestCombo >= 14);
+    await chk('perfect_streak_10', _bestStreak >= 10);
+    await chk('full_gear', allGear);
+    await chk('ember_hoarder', ProgressStore.embersEarned >= 10000);
+    await chk('triple_star', anyTriple);
+    await chk('all_difficulties', anyAllDiff);
+    await chk('veteran', ProgressStore.totalRuns >= 50);
+    await chk('sharp_eye', ProgressStore.perfectStrikes >= 500);
+    return newly;
   }
 
   // ── Gear shop ──────────────────────────────────────────────────────
@@ -396,4 +490,12 @@ class AscentEngine extends ChangeNotifier {
   }
 
   bool get hapticsEnabled => Feedback.enabled;
+
+  void setSound(bool value) {
+    Feedback.soundEnabled = value;
+    ProgressStore.setSound(value);
+    notifyListeners();
+  }
+
+  bool get soundEnabled => Feedback.soundEnabled;
 }

@@ -1,38 +1,57 @@
 import 'package:flutter/services.dart';
 
-/// Tactile feedback layer.
+/// Tactile + audible feedback layer.
 ///
-/// The original build leaned on the `audioplayers` package to ping a sound on
-/// every tap. Ember Ascent drops that dependency entirely and communicates
-/// strike quality through the device's haptic engine instead, which keeps the
-/// binary lean and avoids an audio plugin we do not otherwise need.
+/// Haptics communicate strike quality through the device's vibration engine.
+/// A lightweight sound channel is layered on top using the platform's built-in
+/// system sounds (no audio plugin / asset pipeline required), so the game has
+/// audible feedback while keeping the binary lean. Both channels are
+/// independently toggleable from Settings.
 class Feedback {
   Feedback._();
 
-  static bool enabled = true;
+  static bool enabled = true; // haptics
+  static bool soundEnabled = true;
+
+  static void _click() {
+    if (soundEnabled) SystemSound.play(SystemSoundType.click);
+  }
+
+  static void _alert() {
+    if (soundEnabled) SystemSound.play(SystemSoundType.alert);
+  }
 
   static void perfect() {
-    if (!enabled) return;
-    HapticFeedback.mediumImpact();
+    if (enabled) HapticFeedback.mediumImpact();
+    _click();
   }
 
   static void good() {
-    if (!enabled) return;
-    HapticFeedback.lightImpact();
+    if (enabled) HapticFeedback.lightImpact();
+    _click();
   }
 
   static void weak() {
-    if (!enabled) return;
-    HapticFeedback.selectionClick();
+    if (enabled) HapticFeedback.selectionClick();
   }
 
   static void hazard() {
-    if (!enabled) return;
-    HapticFeedback.heavyImpact();
+    if (enabled) HapticFeedback.heavyImpact();
+    _alert();
   }
 
   static void milestone() {
-    if (!enabled) return;
-    HapticFeedback.mediumImpact();
+    if (enabled) HapticFeedback.mediumImpact();
+    _click();
+  }
+
+  /// Win fanfare — a short double cue.
+  static void summit() {
+    if (enabled) HapticFeedback.heavyImpact();
+    if (soundEnabled) {
+      SystemSound.play(SystemSoundType.click);
+      Future.delayed(const Duration(milliseconds: 120),
+          () => SystemSound.play(SystemSoundType.click));
+    }
   }
 }
