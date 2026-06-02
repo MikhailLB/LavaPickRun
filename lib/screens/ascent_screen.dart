@@ -323,11 +323,11 @@ class _ObjectiveStrip extends StatelessWidget {
         final flawless = engine.burns == 0;
         return Column(
           children: [
-            if (engine.hasTrial)
+            if (engine.hasChallenge)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: _TrialPill(
-                  label: engine.trialLabel,
+                  label: engine.challengeLabel,
                 ),
               ),
             Row(

@@ -65,6 +65,10 @@ class AscentEngine extends ChangeNotifier {
   double _trialPhase = 0; // drives drift oscillation
   double _gustPhase = 0; // drives gust speed waves
   double _shiftTimer = 0; // countdown to the next band jump
+  double _decoyPhase = 0; // drives the decoy band motion
+  double _decoyCenter = 0.5; // live centre of the false (decoy) band
+  double _hidePhase = 0; // drives the blackout band blink
+  bool _bandVisible = true; // false while a blackout band is hidden
 
   int _earnedThisRun = 0;
   int _maxCombo = 0;
@@ -147,25 +151,48 @@ class AscentEngine extends ChangeNotifier {
   bool get charging => _charging;
   double get chargeLevel => _charge;
   bool get echoPending => _echoPending;
+  bool get bandVisible => _bandVisible;
+  bool get hasDecoy => _hasMod(AscentMod.decoy);
+  double get decoyCenter => _decoyCenter;
+
+  /// Whether this level has any twist (band trial or a mod) to surface in UI.
+  bool get hasChallenge =>
+      hasTrial || (_level?.mods.isNotEmpty ?? false);
+
+  /// A short label for the level's headline twist.
+  String get challengeLabel {
+    if (hasTrial) return _peak.trial.label;
+    final m = _level?.mods;
+    if (m != null && m.isNotEmpty) return ascentModLabel(m.first);
+    return '';
+  }
 
   // ── Gear + difficulty derived effective stats ──────────────────────
   double get _focusMul => 1 - gearTier(GearId.focusLens) * 0.04;
   double get _gaugeSpeed =>
       _peak.gaugeSpeed * _difficulty.speedMul * _focusMul;
 
-  /// Gauge speed including the live gust wave on gusty peaks.
+  /// Gauge speed including the live gust wave and any accel mod.
   double get _liveGaugeSpeed {
-    if (!_peak.trial.gusts) return _gaugeSpeed;
-    return _gaugeSpeed * (1 + 0.45 * sin(_gustPhase * 2.0));
+    var s = _gaugeSpeed;
+    if (_peak.trial.gusts) s *= (1 + 0.45 * sin(_gustPhase * 2.0));
+    if (_hasMod(AscentMod.accel)) s *= (1 + 0.6 * _ascent);
+    return s;
   }
   double get _telegraph => _peak.telegraph * _difficulty.telegraphMul;
   double get _eruptionWindow => _peak.eruptionWindow;
-  double get _gapMin => _peak.eruptionGapMin * _difficulty.gapMul;
-  double get _gapMax => _peak.eruptionGapMax * _difficulty.gapMul;
+  double get _gapMin => _peak.eruptionGapMin *
+      _difficulty.gapMul *
+      (_hasMod(AscentMod.doubleErupt) ? 0.55 : 1.0);
+  double get _gapMax => _peak.eruptionGapMax *
+      _difficulty.gapMul *
+      (_hasMod(AscentMod.doubleErupt) ? 0.60 : 1.0);
 
-  double get _perfectBand => _peak.perfectBand *
+  double get _perfectBand =>
+      _peak.perfectBand *
       (1 + gearTier(GearId.steadyHands) * 0.12) *
-      _difficulty.perfectMul;
+      _difficulty.perfectMul *
+      (_hasMod(AscentMod.shrink) ? (1 - 0.45 * _ascent).clamp(0.4, 1.0) : 1.0);
   double get _heatPerStrike => _peak.heatPerStrike *
       (1 - gearTier(GearId.heatSink) * 0.09) *
       _difficulty.heatMul;
@@ -231,6 +258,10 @@ class AscentEngine extends ChangeNotifier {
     _trialPhase = 0;
     _gustPhase = 0;
     _shiftTimer = 2.0;
+    _decoyPhase = 0;
+    _decoyCenter = 0.5;
+    _hidePhase = 0;
+    _bandVisible = true;
     _ventActive = false;
     _ventTimer = 0;
     _ventCd = 4.0;
@@ -312,28 +343,43 @@ class AscentEngine extends ChangeNotifier {
     _hazardTimer = _gapMin + _rng.nextDouble() * (_gapMax - _gapMin);
   }
 
-  /// Moves the live target band according to the peak's trial.
+  /// Moves the live target band according to the peak's trial and offset mod.
   void _advanceTrial(double dt) {
     final t = _peak.trial;
+    final base = _hasMod(AscentMod.offsetHigh)
+        ? 0.70
+        : _hasMod(AscentMod.offsetLow)
+            ? 0.30
+            : 0.5;
     if (t.gusts) _gustPhase += dt;
     if (t.drifts) {
       _trialPhase += dt * 0.9;
-      _bandCenter = (0.5 + sin(_trialPhase) * 0.26).clamp(0.18, 0.82);
-    }
-    if (t.shifts) {
+      _bandCenter = (base + sin(_trialPhase) * 0.22).clamp(0.16, 0.84);
+    } else if (t.shifts) {
       _shiftTimer -= dt;
       if (_shiftTimer <= 0) {
-        _bandTarget = 0.28 + _rng.nextDouble() * 0.44;
+        _bandTarget = 0.24 + _rng.nextDouble() * 0.52;
         _shiftTimer = 1.8 + _rng.nextDouble() * 0.8;
         Feedback.weak();
       }
       _bandCenter += (_bandTarget - _bandCenter) * (1 - exp(-6 * dt));
+    } else {
+      _bandCenter += (base - _bandCenter) * (1 - exp(-8 * dt));
     }
-    if (!t.drifts && !t.shifts) _bandCenter = 0.5;
+    if (_hasMod(AscentMod.decoy)) {
+      _decoyPhase += dt * 1.1;
+      _decoyCenter = (0.5 - sin(_decoyPhase) * 0.26).clamp(0.16, 0.84);
+    }
   }
 
   /// Advances the per-level mechanic mods each frame.
   void _advanceMods(double dt) {
+    if (_hasMod(AscentMod.hidden)) {
+      _hidePhase += dt;
+      _bandVisible = (_hidePhase % 2.0) < 1.3;
+    } else {
+      _bandVisible = true;
+    }
     if (_hasMod(AscentMod.vent)) {
       if (_ventActive) {
         _ventTimer -= dt;
@@ -476,6 +522,22 @@ class AscentEngine extends ChangeNotifier {
   }
 
   void _evaluateStrike({double chargeMul = 1.0}) {
+    // Decoy levels: striking the false red band stings instead of helping.
+    if (_hasMod(AscentMod.decoy)) {
+      final dd = (markerPosition - _decoyCenter).abs();
+      final realD = (markerPosition - _bandCenter).abs();
+      if (dd <= _perfectBand && realD > _peak.goodBand) {
+        _momentum = 0;
+        _perfectStreak = 0;
+        _heat = (_heat + 0.14).clamp(0.0, 1.0);
+        _weakCount++;
+        _emit(StrikeQuality.weak, 0, 0);
+        Feedback.hazard();
+        notifyListeners();
+        return;
+      }
+    }
+
     // Evaluate timing accuracy against the live (possibly moving) band.
     final d = (markerPosition - _bandCenter).abs();
     final StrikeQuality quality;
@@ -506,7 +568,10 @@ class AscentEngine extends ChangeNotifier {
       _momentum = 0;
     }
 
-    final gain = base * momentumMultiplier * chargeMul;
+    // Purist levels: only perfect strikes advance the climb.
+    final puristKill =
+        _hasMod(AscentMod.purist) && quality != StrikeQuality.perfect;
+    final gain = (puristKill ? 0.0 : base) * momentumMultiplier * chargeMul;
     _ascent = (_ascent + gain).clamp(0.0, 1.0);
 
     _heat = (_heat + _heatPerStrike).clamp(0.0, 1.0);

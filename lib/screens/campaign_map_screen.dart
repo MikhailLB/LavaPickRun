@@ -124,10 +124,12 @@ class _LevelRow extends StatelessWidget {
 
   String get _tag {
     if (def.isFlow) return 'LAVA FLOW PUZZLE';
-    final parts = <String>[def.trial.label];
-    if (def.has(AscentMod.vent)) parts.add('Vents');
-    if (def.has(AscentMod.echo)) parts.add('Echo');
-    if (def.has(AscentMod.charge)) parts.add('Charged');
+    final parts = <String>[];
+    if (def.trial != PeakTrial.steady) parts.add(def.trial.label);
+    for (final m in def.mods) {
+      parts.add(ascentModLabel(m));
+    }
+    if (parts.isEmpty) parts.add('Strike the Band');
     return parts.join(' · ');
   }
 

@@ -9,12 +9,35 @@ import 'peaks.dart';
 enum LevelMode { ascent, flow }
 
 /// Extra mechanics that can be layered onto an ascent level. They are
-/// introduced one at a time as the campaign progresses.
+/// introduced one at a time as the campaign progresses, then combined so every
+/// level has its own distinct mix.
 enum AscentMod {
   vent, // periodic cooling vents you tap to dump heat
   echo, // a perfect strike opens a quick bonus "echo" tap window
   charge, // hold-and-release charged strikes instead of plain taps
+  offsetHigh, // target band parks high on the gauge
+  offsetLow, // target band parks low on the gauge
+  shrink, // the perfect band narrows as you climb
+  accel, // the marker speeds up as you climb
+  purist, // only perfect strikes advance the climb
+  hidden, // the band blinks invisible on a cycle
+  doubleErupt, // eruptions come twice as often
+  decoy, // a false red band that punishes if you strike it
 }
+
+String ascentModLabel(AscentMod m) => switch (m) {
+      AscentMod.vent => 'Vents',
+      AscentMod.echo => 'Echo',
+      AscentMod.charge => 'Charged',
+      AscentMod.offsetHigh => 'High Band',
+      AscentMod.offsetLow => 'Low Band',
+      AscentMod.shrink => 'Shrinking',
+      AscentMod.accel => 'Accelerando',
+      AscentMod.purist => 'Purist',
+      AscentMod.hidden => 'Blackout',
+      AscentMod.doubleErupt => 'Double Erupt',
+      AscentMod.decoy => 'Decoy',
+    };
 
 /// One campaign level. The 50 levels form a single linear ladder (no separate
 /// difficulty tabs). Difficulty rises smoothly across the ladder, and new
@@ -108,33 +131,95 @@ class Levels {
   // First-time mechanic introductions (index -> label/hint).
   static const Map<int, List<String>> _teach = {
     0: ['Strike the Band', 'Tap when the marker crosses the gold band.'],
-    3: ['Drifting Band', 'The gold band glides up and down — track it.'],
+    1: ['High Band', 'The target band parks high on the gauge.'],
+    2: ['Drifting Band', 'The gold band glides up and down — track it.'],
+    3: ['Ember Gusts', 'Gusts push the marker faster and slower.'],
     4: ['Lava Flow', 'Rotate pipes to connect the source to the drain.'],
-    6: ['Ember Gusts', 'Gusts push the marker faster and slower.'],
-    7: ['Cooling Vents', 'Tap the VENT when it appears to dump heat.'],
-    12: ['Shifting Band', 'The band jumps to a new spot — re-aim fast.'],
-    14: ['Echo Strike', 'After a perfect, tap again in the echo window for bonus.'],
+    5: ['Shifting Band', 'The band jumps to a new spot — re-aim fast.'],
+    6: ['Cooling Vents', 'Tap the VENT when it appears to dump heat.'],
+    7: ['Shrinking Band', 'The perfect band narrows as you climb.'],
+    8: ['Purist', 'Only perfect strikes advance the climb.'],
+    10: ['Blackout Band', 'The band blinks out — strike on rhythm.'],
+    11: ['Echo Strike', 'After a perfect, tap again in the echo window.'],
+    12: ['Accelerando', 'The marker speeds up the higher you climb.'],
+    13: ['Decoy Band', 'A false red band punishes you — hit only the gold.'],
+    14: ['Double Eruption', 'Eruptions come twice as often. Stay sharp.'],
+    15: ['Charged Strike', 'Hold to charge, release on the band for a big hit.'],
     19: ['Squall', 'A drifting band and gusts at the same time.'],
-    21: ['Charged Strike', 'Hold to charge, release on the band for a big hit.'],
     32: ['Tempest', 'The band leaps while gusts tear at the marker.'],
   };
 
-  static PeakTrial _trialFor(int i) {
-    if (i < 3) return PeakTrial.steady;
-    if (i < 6) return PeakTrial.drift;
-    if (i < 12) return PeakTrial.gust;
-    if (i < 19) return PeakTrial.shift;
-    if (i < 32) return PeakTrial.squall;
-    return PeakTrial.tempest;
-  }
+  // Hand-authored early ladder so variety hits from the very start, then a
+  // rotating combo table keeps every later level distinct.
+  static const Map<int, PeakTrial> _earlyTrial = {
+    0: PeakTrial.steady,
+    1: PeakTrial.steady,
+    2: PeakTrial.drift,
+    3: PeakTrial.gust,
+    5: PeakTrial.shift,
+    6: PeakTrial.gust,
+    7: PeakTrial.drift,
+    8: PeakTrial.shift,
+    10: PeakTrial.drift,
+    11: PeakTrial.gust,
+    12: PeakTrial.shift,
+    13: PeakTrial.squall,
+    14: PeakTrial.gust,
+    15: PeakTrial.drift,
+  };
 
-  static Set<AscentMod> _modsFor(int i) {
-    final mods = <AscentMod>{};
-    if (i >= 7 && i % 3 == 1) mods.add(AscentMod.vent);
-    if (i >= 14 && i % 4 == 2) mods.add(AscentMod.echo);
-    if (i >= 21 && i % 5 == 1) mods.add(AscentMod.charge);
-    return mods;
-  }
+  static const Map<int, Set<AscentMod>> _earlyMods = {
+    0: <AscentMod>{},
+    1: {AscentMod.offsetHigh},
+    2: <AscentMod>{},
+    3: <AscentMod>{},
+    5: <AscentMod>{},
+    6: {AscentMod.vent},
+    7: {AscentMod.shrink},
+    8: {AscentMod.purist},
+    10: {AscentMod.hidden},
+    11: {AscentMod.echo},
+    12: {AscentMod.accel},
+    13: {AscentMod.decoy},
+    14: {AscentMod.doubleErupt, AscentMod.vent},
+    15: {AscentMod.charge},
+  };
+
+  static const List<PeakTrial> _trialCycle = [
+    PeakTrial.drift,
+    PeakTrial.gust,
+    PeakTrial.shift,
+    PeakTrial.squall,
+    PeakTrial.tempest,
+  ];
+
+  // Distinct combos for the later ladder; each adjacent level differs.
+  static const List<Set<AscentMod>> _comboPool = [
+    {AscentMod.shrink},
+    {AscentMod.accel, AscentMod.vent},
+    {AscentMod.purist},
+    {AscentMod.hidden},
+    {AscentMod.decoy},
+    {AscentMod.doubleErupt, AscentMod.echo},
+    {AscentMod.offsetHigh, AscentMod.shrink},
+    {AscentMod.offsetLow, AscentMod.accel},
+    {AscentMod.hidden, AscentMod.vent},
+    {AscentMod.decoy, AscentMod.charge},
+    {AscentMod.purist, AscentMod.doubleErupt},
+    {AscentMod.shrink, AscentMod.echo},
+    {AscentMod.accel, AscentMod.decoy},
+    {AscentMod.offsetHigh, AscentMod.hidden},
+    {AscentMod.offsetLow, AscentMod.doubleErupt, AscentMod.vent},
+    {AscentMod.purist, AscentMod.hidden},
+    {AscentMod.charge, AscentMod.shrink},
+    {AscentMod.decoy, AscentMod.doubleErupt},
+  ];
+
+  static PeakTrial _trialFor(int i) =>
+      _earlyTrial[i] ?? _trialCycle[i % _trialCycle.length];
+
+  static Set<AscentMod> _modsFor(int i) =>
+      _earlyMods[i] ?? _comboPool[i % _comboPool.length];
 
   static List<LevelDef> _generate() {
     final out = <LevelDef>[];
