@@ -28,6 +28,7 @@ class Peaks {
       perfectBand: 0.090,
       goodBand: 0.21,
       comboGoal: 8,
+      trial: PeakTrial.steady,
     ),
     Peak(
       index: 1,
@@ -46,6 +47,7 @@ class Peaks {
       perfectBand: 0.082,
       goodBand: 0.195,
       comboGoal: 9,
+      trial: PeakTrial.drift,
     ),
     Peak(
       index: 2,
@@ -64,6 +66,7 @@ class Peaks {
       perfectBand: 0.075,
       goodBand: 0.185,
       comboGoal: 10,
+      trial: PeakTrial.gust,
     ),
     Peak(
       index: 3,
@@ -82,6 +85,7 @@ class Peaks {
       perfectBand: 0.069,
       goodBand: 0.175,
       comboGoal: 11,
+      trial: PeakTrial.shift,
     ),
     Peak(
       index: 4,
@@ -100,6 +104,7 @@ class Peaks {
       perfectBand: 0.063,
       goodBand: 0.165,
       comboGoal: 12,
+      trial: PeakTrial.squall,
     ),
     Peak(
       index: 5,
@@ -118,6 +123,7 @@ class Peaks {
       perfectBand: 0.058,
       goodBand: 0.158,
       comboGoal: 13,
+      trial: PeakTrial.shift,
     ),
     Peak(
       index: 6,
@@ -136,6 +142,7 @@ class Peaks {
       perfectBand: 0.052,
       goodBand: 0.150,
       comboGoal: 14,
+      trial: PeakTrial.tempest,
     ),
   ];
 

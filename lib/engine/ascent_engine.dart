@@ -48,6 +48,13 @@ class AscentEngine extends ChangeNotifier {
   double _hazardTimer = 0;
   double _stateTimer = 0; // counts down telegraph / eruption / vent
 
+  // ── Trial (per-peak gameplay twist) live state ─────────────────────
+  double _bandCenter = 0.5; // live centre of the target band (0..1)
+  double _bandTarget = 0.5; // where a shifting band is easing toward
+  double _trialPhase = 0; // drives drift oscillation
+  double _gustPhase = 0; // drives gust speed waves
+  double _shiftTimer = 0; // countdown to the next band jump
+
   int _earnedThisRun = 0;
   int _maxCombo = 0;
   int _burns = 0;
@@ -105,13 +112,29 @@ class AscentEngine extends ChangeNotifier {
     return t < 0.5 ? t * 2.0 : (1.0 - t) * 2.0;
   }
 
-  /// Centre of the timing target (the gauge midpoint).
+  /// Live centre of the timing target. Most peaks keep it at 0.5, but trial
+  /// peaks drift, gust or jump it around — this is what the view and the
+  /// strike judge both read.
+  double get bandCenter => _bandCenter;
+
+  /// Static fallback centre (kept for reference / non-trial use).
   static const double targetCenter = 0.5;
+
+  PeakTrial get trial => _peak.trial;
+  bool get hasTrial => _peak.trial != PeakTrial.steady;
+  String get trialLabel => _peak.trial.label;
+  String get trialHint => _peak.trial.hint;
 
   // ── Gear + difficulty derived effective stats ──────────────────────
   double get _focusMul => 1 - gearTier(GearId.focusLens) * 0.04;
   double get _gaugeSpeed =>
       _peak.gaugeSpeed * _difficulty.speedMul * _focusMul;
+
+  /// Gauge speed including the live gust wave on gusty peaks.
+  double get _liveGaugeSpeed {
+    if (!_peak.trial.gusts) return _gaugeSpeed;
+    return _gaugeSpeed * (1 + 0.45 * sin(_gustPhase * 2.0));
+  }
   double get _telegraph => _peak.telegraph * _difficulty.telegraphMul;
   double get _eruptionWindow => _peak.eruptionWindow;
   double get _gapMin => _peak.eruptionGapMin * _difficulty.gapMul;
@@ -164,6 +187,11 @@ class AscentEngine extends ChangeNotifier {
     _gaugePhase = _rng.nextDouble();
     _hazardTimer = _gapMax + 1.5; // gentle lead-in
     _stateTimer = 0;
+    _bandCenter = 0.5;
+    _bandTarget = 0.5;
+    _trialPhase = 0;
+    _gustPhase = 0;
+    _shiftTimer = 2.0;
     _earnedThisRun = 0;
     _maxCombo = 0;
     _burns = 0;
@@ -193,7 +221,8 @@ class AscentEngine extends ChangeNotifier {
       return;
     }
 
-    _gaugePhase += dt * _gaugeSpeed;
+    _advanceTrial(dt);
+    _gaugePhase += dt * _liveGaugeSpeed;
 
     // Heat always bleeds off; venting accelerates it.
     final decay = _heatDecay * (_hazard == HazardState.venting ? 3.4 : 1.0);
@@ -237,6 +266,26 @@ class AscentEngine extends ChangeNotifier {
     _hazardTimer = _gapMin + _rng.nextDouble() * (_gapMax - _gapMin);
   }
 
+  /// Moves the live target band according to the peak's trial.
+  void _advanceTrial(double dt) {
+    final t = _peak.trial;
+    if (t.gusts) _gustPhase += dt;
+    if (t.drifts) {
+      _trialPhase += dt * 0.9;
+      _bandCenter = (0.5 + sin(_trialPhase) * 0.26).clamp(0.18, 0.82);
+    }
+    if (t.shifts) {
+      _shiftTimer -= dt;
+      if (_shiftTimer <= 0) {
+        _bandTarget = 0.28 + _rng.nextDouble() * 0.44;
+        _shiftTimer = 1.8 + _rng.nextDouble() * 0.8;
+        Feedback.weak();
+      }
+      _bandCenter += (_bandTarget - _bandCenter) * (1 - exp(-6 * dt));
+    }
+    if (!t.drifts && !t.shifts) _bandCenter = 0.5;
+  }
+
   // ── Player input ───────────────────────────────────────────────────
   void strike() {
     // First tap arms the run.
@@ -273,8 +322,8 @@ class AscentEngine extends ChangeNotifier {
       return;
     }
 
-    // Evaluate timing accuracy.
-    final d = (markerPosition - targetCenter).abs();
+    // Evaluate timing accuracy against the live (possibly moving) band.
+    final d = (markerPosition - _bandCenter).abs();
     final StrikeQuality quality;
     final double base;
     if (d <= _perfectBand) {

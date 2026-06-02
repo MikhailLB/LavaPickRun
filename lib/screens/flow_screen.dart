@@ -119,13 +119,29 @@ class _FlowScreenState extends State<FlowScreen> {
   }
 
   Widget _legend() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Text(
-        'Tap pipes to rotate them. Connect the blue source to the gold drain.',
-        textAlign: TextAlign.center,
-        style: AppText.body(12),
-      ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Tap a pipe to rotate it. Build an unbroken pipeline so lava flows '
+            'from the source to the drain.',
+            textAlign: TextAlign.center,
+            style: AppText.body(12),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            _LegendDot(color: Palette.cool, label: 'Source'),
+            SizedBox(width: 18),
+            _LegendDot(color: Palette.gold, label: 'Drain'),
+            SizedBox(width: 18),
+            _LegendDot(color: Palette.ember, label: 'Lava'),
+          ],
+        ),
+      ],
     );
   }
 
@@ -149,7 +165,7 @@ class _FlowScreenState extends State<FlowScreen> {
                       child: GestureDetector(
                         onTap: () => _engine.rotate(r, c),
                         child: Padding(
-                          padding: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(3),
                           child: CustomPaint(
                             painter: FlowTilePainter(
                               mask: _engine.maskAt(r, c),
@@ -157,6 +173,7 @@ class _FlowScreenState extends State<FlowScreen> {
                               isSource: _engine.isSource(r, c),
                               isDrain: _engine.isDrain(r, c),
                             ),
+                            child: const SizedBox.expand(),
                           ),
                         ),
                       ),
@@ -200,6 +217,33 @@ class _FlowScreenState extends State<FlowScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6)],
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label.toUpperCase(),
+            style: AppText.label(10, color: Colors.white70, spacing: 1)),
+      ],
     );
   }
 }

@@ -167,11 +167,13 @@ class GameCanvasPainter extends CustomPainter {
 
     double posToY(double pos) => lerpDouble(bottom, top, pos)!;
 
+    final center = engine.bandCenter;
+
     // Good band.
     final goodTop = posToY(
-        (AscentEngine.targetCenter + engine.goodBandView).clamp(0.0, 1.0));
+        (center + engine.goodBandView).clamp(0.0, 1.0));
     final goodBottom = posToY(
-        (AscentEngine.targetCenter - engine.goodBandView).clamp(0.0, 1.0));
+        (center - engine.goodBandView).clamp(0.0, 1.0));
     canvas.drawRRect(
       RRect.fromLTRBR(
         x - width / 2, goodTop, x + width / 2, goodBottom,
@@ -181,9 +183,9 @@ class GameCanvasPainter extends CustomPainter {
 
     // Perfect band.
     final perfTop = posToY(
-        (AscentEngine.targetCenter + engine.perfectBandView).clamp(0.0, 1.0));
+        (center + engine.perfectBandView).clamp(0.0, 1.0));
     final perfBottom = posToY(
-        (AscentEngine.targetCenter - engine.perfectBandView).clamp(0.0, 1.0));
+        (center - engine.perfectBandView).clamp(0.0, 1.0));
     canvas.drawRRect(
       RRect.fromLTRBR(
         x - width / 2, perfTop, x + width / 2, perfBottom,

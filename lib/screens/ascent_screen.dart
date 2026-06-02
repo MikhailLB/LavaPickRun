@@ -163,7 +163,11 @@ class _AscentScreenState extends State<AscentScreen>
                 if (_engine.phase != RunPhase.ready) {
                   return const SizedBox.shrink();
                 }
-                return const Center(child: _TapToBegin());
+                return Center(
+                  child: _TapToBegin(
+                    hint: _engine.hasTrial ? _engine.trialHint : null,
+                  ),
+                );
               },
             ),
           ),
@@ -260,23 +264,63 @@ class _ObjectiveStrip extends StatelessWidget {
       builder: (context, _) {
         final comboDone = engine.maxCombo >= engine.comboGoal;
         final flawless = engine.burns == 0;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        return Column(
           children: [
-            _ObjPill(
-              icon: Icons.bolt,
-              label: 'COMBO ${engine.maxCombo}/${engine.comboGoal}',
-              done: comboDone,
-            ),
-            const SizedBox(width: 8),
-            _ObjPill(
-              icon: Icons.shield_moon,
-              label: 'FLAWLESS',
-              done: flawless,
+            if (engine.hasTrial)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _TrialPill(
+                  label: engine.trialLabel,
+                ),
+              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _ObjPill(
+                  icon: Icons.bolt,
+                  label: 'COMBO ${engine.maxCombo}/${engine.comboGoal}',
+                  done: comboDone,
+                ),
+                const SizedBox(width: 8),
+                _ObjPill(
+                  icon: Icons.shield_moon,
+                  label: 'FLAWLESS',
+                  done: flawless,
+                ),
+              ],
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _TrialPill extends StatelessWidget {
+  const _TrialPill({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [
+          Palette.emberHot.withValues(alpha: 0.85),
+          Palette.emberDeep.withValues(alpha: 0.85),
+        ]),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Palette.gold, width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.whatshot_rounded, size: 14, color: Palette.gold),
+          const SizedBox(width: 6),
+          Text('TRIAL · ${label.toUpperCase()}',
+              style: AppText.label(10, color: Colors.white, spacing: 1.2)),
+        ],
+      ),
     );
   }
 }
@@ -381,18 +425,41 @@ class _StatusBanner extends StatelessWidget {
 }
 
 class _TapToBegin extends StatelessWidget {
-  const _TapToBegin();
+  const _TapToBegin({this.hint});
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Palette.gold.withValues(alpha: 0.7)),
-      ),
-      child: Text('TAP TO BEGIN', style: AppText.display(20)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Palette.gold.withValues(alpha: 0.7)),
+          ),
+          child: Text('TAP TO BEGIN', style: AppText.display(20)),
+        ),
+        if (hint != null) ...[
+          const SizedBox(height: 14),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Palette.emberHot.withValues(alpha: 0.6)),
+            ),
+            child: Text(
+              hint!,
+              textAlign: TextAlign.center,
+              style: AppText.body(13, color: Palette.cream),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

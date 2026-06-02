@@ -164,56 +164,75 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
+                    // Secondary play modes.
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        alignment: WrapAlignment.center,
+                      child: Row(
                         children: [
-                          _FeatureTile(
-                            icon: Icons.water_drop_rounded,
-                            label: 'Lava Flow',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () =>
-                                Navigator.of(context).pushNamed(Routes.flow),
+                          Expanded(
+                            child: _PlayCard(
+                              icon: Icons.water_drop_rounded,
+                              title: 'LAVA FLOW',
+                              subtitle: 'Pipe puzzle',
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed(Routes.flow),
+                            ),
                           ),
-                          _FeatureTile(
-                            icon: Icons.handyman,
-                            label: 'Forge',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () =>
-                                Navigator.of(context).pushNamed(Routes.forge),
-                          ),
-                          _FeatureTile(
-                            icon: Icons.menu_book_rounded,
-                            label: 'Codex',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () =>
-                                Navigator.of(context).pushNamed(Routes.codex),
-                          ),
-                          _FeatureTile(
-                            icon: Icons.emoji_events_rounded,
-                            label: 'Awards',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () => Navigator.of(context)
-                                .pushNamed(Routes.achievements),
-                          ),
-                          _FeatureTile(
-                            icon: Icons.insights_rounded,
-                            label: 'Stats',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () =>
-                                Navigator.of(context).pushNamed(Routes.stats),
-                          ),
-                          _FeatureTile(
-                            icon: Icons.palette_rounded,
-                            label: 'Customize',
-                            width: (size.width - 40 - 20) / 3,
-                            onTap: () => Navigator.of(context)
-                                .pushNamed(Routes.customize),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _PlayCard(
+                              icon: Icons.handyman_rounded,
+                              title: 'FORGE',
+                              subtitle: 'Upgrade gear',
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed(Routes.forge),
+                            ),
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Meta dock.
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                              color: Palette.ember.withValues(alpha: 0.35)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _DockButton(
+                              icon: Icons.menu_book_rounded,
+                              label: 'Codex',
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed(Routes.codex),
+                            ),
+                            _DockButton(
+                              icon: Icons.emoji_events_rounded,
+                              label: 'Awards',
+                              onTap: () => Navigator.of(context)
+                                  .pushNamed(Routes.achievements),
+                            ),
+                            _DockButton(
+                              icon: Icons.insights_rounded,
+                              label: 'Stats',
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed(Routes.stats),
+                            ),
+                            _DockButton(
+                              icon: Icons.palette_rounded,
+                              label: 'Theme',
+                              onTap: () => Navigator.of(context)
+                                  .pushNamed(Routes.customize),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -320,24 +339,24 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _FeatureTile extends StatefulWidget {
-  const _FeatureTile({
+class _PlayCard extends StatefulWidget {
+  const _PlayCard({
     required this.icon,
-    required this.label,
-    required this.width,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
-  final double width;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
-  State<_FeatureTile> createState() => _FeatureTileState();
+  State<_PlayCard> createState() => _PlayCardState();
 }
 
-class _FeatureTileState extends State<_FeatureTile> {
+class _PlayCardState extends State<_PlayCard> {
   bool _down = false;
 
   @override
@@ -350,28 +369,90 @@ class _FeatureTileState extends State<_FeatureTile> {
         widget.onTap();
       },
       child: AnimatedScale(
-        scale: _down ? 0.95 : 1.0,
+        scale: _down ? 0.96 : 1.0,
         duration: const Duration(milliseconds: 90),
         child: Container(
-          width: widget.width,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Palette.ember.withValues(alpha: 0.5)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Palette.charcoal,
+                Colors.black.withValues(alpha: 0.55),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Palette.ember.withValues(alpha: 0.55)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Icon(widget.icon, color: Palette.gold, size: 24),
-              const SizedBox(height: 6),
-              Text(widget.label.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.label(9, color: Palette.cream, spacing: 1)),
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Palette.emberHot.withValues(alpha: 0.18),
+                  border: Border.all(color: Palette.gold.withValues(alpha: 0.6)),
+                ),
+                child: Icon(widget.icon, color: Palette.gold, size: 22),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.title(15, color: Palette.gold)),
+                    Text(widget.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.body(11)),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DockButton extends StatelessWidget {
+  const _DockButton(
+      {required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withValues(alpha: 0.45),
+              border: Border.all(color: Palette.ember.withValues(alpha: 0.55)),
+            ),
+            child: Icon(icon, color: Palette.gold, size: 22),
+          ),
+          const SizedBox(height: 5),
+          Text(label.toUpperCase(),
+              style: AppText.label(8, color: Palette.cream, spacing: 0.8)),
+        ],
       ),
     );
   }

@@ -108,6 +108,8 @@ class _SummitScreenState extends State<SummitScreen>
                             ),
                             const SizedBox(height: 10),
                           ],
+                          _RunBreakdown(engine: engine),
+                          const SizedBox(height: 14),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 18, vertical: 12),
@@ -189,6 +191,39 @@ class _SummitScreenState extends State<SummitScreen>
     engine.startRun(peakIndex, difficulty: engine.difficulty);
     Navigator.of(context)
         .pushReplacementNamed(Routes.ascent, arguments: peakIndex);
+  }
+}
+
+class _RunBreakdown extends StatelessWidget {
+  const _RunBreakdown({required this.engine});
+  final AscentEngine engine;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, String value, Color color) => Column(
+          children: [
+            Text(value, style: AppText.title(16, color: color)),
+            Text(label,
+                style: AppText.label(8, color: Colors.white60, spacing: 1)),
+          ],
+        );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Palette.ember.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          chip('PERFECT', '${engine.perfectCount}', Palette.steady),
+          chip('GOOD', '${engine.goodCount}', Palette.gold),
+          chip('WEAK', '${engine.weakCount}', Palette.danger),
+          chip('STREAK', '${engine.bestStreakThisRun}', Palette.cream),
+        ],
+      ),
+    );
   }
 }
 
