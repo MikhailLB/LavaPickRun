@@ -10,6 +10,7 @@ class Routes {
   static const forge = '/forge';
 
   // Added content / feature screens.
+  static const campaign = '/campaign';
   static const flow = '/flow';
   static const codex = '/codex';
   static const achievements = '/achievements';

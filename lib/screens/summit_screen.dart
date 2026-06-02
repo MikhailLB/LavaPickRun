@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/routes.dart';
-import '../data/peaks.dart';
+import '../data/levels.dart';
 import '../engine/ascent_engine.dart';
 import '../engine/models.dart';
 import '../state/store.dart';
@@ -42,7 +42,8 @@ class _SummitScreenState extends State<SummitScreen>
     final engine = context.read<AscentEngine>();
     final peak = engine.peak;
     final won = engine.phase == RunPhase.summit;
-    final hasNext = peak.index + 1 < Peaks.count;
+    final levelIndex = engine.currentLevelIndex;
+    final hasNext = levelIndex + 1 < Levels.count;
 
     return Scaffold(
       body: Stack(
@@ -74,7 +75,7 @@ class _SummitScreenState extends State<SummitScreen>
                               style: AppText.display(34)),
                           const SizedBox(height: 4),
                           Text(
-                              '${peak.name.toUpperCase()} · ${engine.difficulty.label.toUpperCase()}',
+                              'LEVEL ${levelIndex + 1} · ${peak.subtitle.toUpperCase()}',
                               textAlign: TextAlign.center,
                               style: AppText.label(12,
                                   color: Palette.ember, spacing: 2)),
@@ -136,29 +137,29 @@ class _SummitScreenState extends State<SummitScreen>
                           const SizedBox(height: 22),
                           if (won && hasNext)
                             EmberButton(
-                              label: 'NEXT PEAK',
+                              label: 'NEXT LEVEL',
                               icon: Icons.arrow_upward,
                               primary: true,
-                              onTap: () => _go(context, engine, peak.index + 1),
+                              onTap: () => _go(context, engine, levelIndex + 1),
                             ),
                           if (won && hasNext) const SizedBox(height: 10),
                           EmberButton(
-                            label: won ? 'CLIMB AGAIN' : 'RETRY',
+                            label: won ? 'PLAY AGAIN' : 'RETRY',
                             icon: Icons.refresh,
                             primary: !(won && hasNext),
-                            onTap: () => _go(context, engine, peak.index),
+                            onTap: () => _go(context, engine, levelIndex),
                           ),
                           const SizedBox(height: 10),
                           Row(
                             children: [
                               Expanded(
                                 child: EmberButton(
-                                  label: 'Peaks',
+                                  label: 'Levels',
                                   icon: Icons.map_outlined,
                                   compact: true,
                                   onTap: () => Navigator.of(context)
                                       .pushNamedAndRemoveUntil(
-                                          Routes.peaks,
+                                          Routes.campaign,
                                           (r) => r.settings.name == Routes.home),
                                 ),
                               ),
@@ -187,10 +188,9 @@ class _SummitScreenState extends State<SummitScreen>
     );
   }
 
-  void _go(BuildContext context, AscentEngine engine, int peakIndex) {
-    engine.startRun(peakIndex, difficulty: engine.difficulty);
-    Navigator.of(context)
-        .pushReplacementNamed(Routes.ascent, arguments: peakIndex);
+  void _go(BuildContext context, AscentEngine engine, int levelIndex) {
+    engine.startLevel(Levels.byIndex(levelIndex));
+    Navigator.of(context).pushReplacementNamed(Routes.ascent);
   }
 }
 

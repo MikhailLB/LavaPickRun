@@ -36,9 +36,14 @@ class ProgressStore {
   static const _kTheme = 'ea.theme';
   static const _kTutorialSeen = 'ea.tutorial_seen';
 
-  // ── Lava Flow (second mechanic) ─────────────────────────────────────
+  // ── Lava Flow (standalone practice) ─────────────────────────────────
   static const _kFlowLevel = 'ea.flow.level';
   static const _kFlowBest = 'ea.flow.best_moves.';
+
+  // ── Campaign (single 50-level ladder) ───────────────────────────────
+  static const _kCampaignUnlocked = 'ea.campaign.unlocked';
+  static const _kLevelStarPrefix = 'ea.lvlstar.';
+  static const _kIntros = 'ea.intros';
 
   static SharedPreferences? _prefs;
 
@@ -210,6 +215,49 @@ class ProgressStore {
     final cur = flowBestMoves(level);
     if (cur != 0 && moves >= cur) return Future.value();
     return _p.setInt('$_kFlowBest$level', moves);
+  }
+
+  // ── Campaign progression ────────────────────────────────────────────
+  /// Highest unlocked campaign level index (0 = only the first is playable).
+  static int get campaignUnlocked => _p.getInt(_kCampaignUnlocked) ?? 0;
+  static Future<void> unlockCampaignLevel(int index) {
+    if (index <= campaignUnlocked) return Future.value();
+    return _p.setInt(_kCampaignUnlocked, index);
+  }
+
+  static int levelStars(int index) =>
+      _p.getInt('$_kLevelStarPrefix$index') ?? 0;
+  static Future<void> setLevelStars(int index, int stars) {
+    if (stars <= levelStars(index)) return Future.value();
+    return _p.setInt('$_kLevelStarPrefix$index', stars.clamp(0, 3));
+  }
+
+  static bool isLevelCleared(int index) => levelStars(index) > 0;
+
+  static int campaignStars() {
+    var sum = 0;
+    for (var i = 0; i < 50; i++) {
+      sum += levelStars(i);
+    }
+    return sum;
+  }
+
+  static int levelsCleared() {
+    var n = 0;
+    for (var i = 0; i < 50; i++) {
+      if (levelStars(i) > 0) n++;
+    }
+    return n;
+  }
+
+  // ── One-time mechanic intros ────────────────────────────────────────
+  static bool introSeen(String label) =>
+      (_p.getStringList(_kIntros) ?? const []).contains(label);
+  static Future<void> markIntroSeen(String label) async {
+    final set = (_p.getStringList(_kIntros) ?? const []).toSet();
+    if (set.add(label)) {
+      await _p.setStringList(_kIntros, set.toList());
+    }
   }
 
   static Future<void> wipe() => _p.clear();

@@ -4,6 +4,7 @@ import '../engine/ascent_engine.dart';
 import '../screens/achievements_screen.dart';
 import '../screens/ascent_screen.dart';
 import '../screens/boot_screen.dart';
+import '../screens/campaign_map_screen.dart';
 import '../screens/codex_screen.dart';
 import '../screens/customize_screen.dart';
 import '../screens/flow_screen.dart';
@@ -62,8 +63,11 @@ class _EmberAppState extends State<EmberApp> {
         page = const SummitScreen();
       case Routes.forge:
         page = const ForgeScreen();
+      case Routes.campaign:
+        page = const CampaignMapScreen();
       case Routes.flow:
-        page = const FlowScreen();
+        final arg = settings.arguments;
+        page = FlowScreen(campaignLevel: arg is int ? arg : null);
       case Routes.codex:
         page = const CodexScreen();
       case Routes.achievements:

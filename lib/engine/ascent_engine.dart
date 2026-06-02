@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../data/codex.dart';
 import '../data/gear_catalog.dart';
+import '../data/levels.dart';
 import '../data/peaks.dart';
 import '../data/progress_store.dart';
 import '../feedback/haptics.dart';
@@ -33,9 +34,19 @@ class AscentEngine extends ChangeNotifier {
 
   // ── Run state ──────────────────────────────────────────────────────
   late Peak _peak;
+  LevelDef? _level;
   Difficulty _difficulty = Difficulty.normal;
   RunPhase _phase = RunPhase.ready;
   HazardState _hazard = HazardState.calm;
+
+  // ── Mechanic mod state (vent / echo / charge) ──────────────────────
+  bool _ventActive = false;
+  double _ventTimer = 0;
+  double _ventCd = 0;
+  bool _echoPending = false;
+  double _echoTimer = 0;
+  bool _charging = false;
+  double _charge = 0;
 
   double _ascent = 0;
   double _heat = 0;
@@ -125,6 +136,18 @@ class AscentEngine extends ChangeNotifier {
   String get trialLabel => _peak.trial.label;
   String get trialHint => _peak.trial.hint;
 
+  // ── Level / mechanic accessors ─────────────────────────────────────
+  LevelDef? get level => _level;
+  int get currentLevelIndex => _level?.index ?? 0;
+  bool _hasMod(AscentMod m) => _level?.has(m) ?? false;
+  bool get usesCharge => _hasMod(AscentMod.charge);
+  bool get hasVent => _hasMod(AscentMod.vent);
+  bool get hasEcho => _hasMod(AscentMod.echo);
+  bool get ventActive => _ventActive;
+  bool get charging => _charging;
+  double get chargeLevel => _charge;
+  bool get echoPending => _echoPending;
+
   // ── Gear + difficulty derived effective stats ──────────────────────
   double get _focusMul => 1 - gearTier(GearId.focusLens) * 0.04;
   double get _gaugeSpeed =>
@@ -173,9 +196,25 @@ class AscentEngine extends ChangeNotifier {
   }
 
   // ── Run lifecycle ──────────────────────────────────────────────────
+  /// Legacy entry (peak + difficulty). Kept for compatibility.
   void startRun(int peakIndex, {Difficulty? difficulty}) {
+    _level = null;
     _peak = Peaks.all[peakIndex.clamp(0, Peaks.count - 1)];
     _difficulty = difficulty ?? _difficulty;
+    _resetRun();
+    notifyListeners();
+  }
+
+  /// Campaign entry — runs a single ladder level.
+  void startLevel(LevelDef def) {
+    _level = def;
+    _peak = def.toPeak();
+    _difficulty = Difficulty.normal;
+    _resetRun();
+    notifyListeners();
+  }
+
+  void _resetRun() {
     _phase = RunPhase.ready;
     _hazard = HazardState.calm;
     _ascent = 0;
@@ -192,6 +231,13 @@ class AscentEngine extends ChangeNotifier {
     _trialPhase = 0;
     _gustPhase = 0;
     _shiftTimer = 2.0;
+    _ventActive = false;
+    _ventTimer = 0;
+    _ventCd = 4.0;
+    _echoPending = false;
+    _echoTimer = 0;
+    _charging = false;
+    _charge = 0;
     _earnedThisRun = 0;
     _maxCombo = 0;
     _burns = 0;
@@ -202,7 +248,6 @@ class AscentEngine extends ChangeNotifier {
     _perfectStreak = 0;
     _bestStreak = 0;
     _flashes.clear();
-    notifyListeners();
   }
 
   void abandonRun() {
@@ -222,6 +267,7 @@ class AscentEngine extends ChangeNotifier {
     }
 
     _advanceTrial(dt);
+    _advanceMods(dt);
     _gaugePhase += dt * _liveGaugeSpeed;
 
     // Heat always bleeds off; venting accelerates it.
@@ -286,6 +332,89 @@ class AscentEngine extends ChangeNotifier {
     if (!t.drifts && !t.shifts) _bandCenter = 0.5;
   }
 
+  /// Advances the per-level mechanic mods each frame.
+  void _advanceMods(double dt) {
+    if (_hasMod(AscentMod.vent)) {
+      if (_ventActive) {
+        _ventTimer -= dt;
+        if (_ventTimer <= 0) {
+          _ventActive = false;
+          _ventCd = 3.0;
+          notifyListeners();
+        }
+      } else {
+        _ventCd -= dt;
+        if (_ventCd <= 0 && _heat > 0.5) {
+          _ventActive = true;
+          _ventTimer = 2.8;
+          Feedback.weak();
+          notifyListeners();
+        }
+      }
+    }
+    if (_echoPending) {
+      _echoTimer -= dt;
+      if (_echoTimer <= 0) {
+        _echoPending = false;
+        notifyListeners();
+      }
+    }
+    if (_charging) {
+      _charge = (_charge + dt / 0.8).clamp(0.0, 1.0);
+    }
+  }
+
+  /// Tap a cooling vent to dump heat (vent levels only).
+  void tapVent() {
+    if (!_ventActive) return;
+    _heat = (_heat * 0.3).clamp(0.0, 1.0);
+    _ventActive = false;
+    _ventCd = 2.5;
+    final r = (3 * _emberMult).round();
+    _embers += r;
+    _earnedThisRun += r;
+    ProgressStore.setEmbers(_embers);
+    Feedback.milestone();
+    notifyListeners();
+  }
+
+  // ── Charged strike input (charge levels) ───────────────────────────
+  void beginCharge() {
+    if (_phase == RunPhase.ready) {
+      _phase = RunPhase.climbing;
+      _scheduleNextEruption();
+      Feedback.good();
+    }
+    if (_phase != RunPhase.climbing) return;
+    if (_overheated || _hazard == HazardState.erupting) return;
+    _charging = true;
+    _charge = 0;
+    notifyListeners();
+  }
+
+  void releaseCharge() {
+    if (!_charging) {
+      // A quick tap with no real hold still counts as a normal strike.
+      strike();
+      return;
+    }
+    _charging = false;
+    final mul = 1.0 + _charge;
+    _charge = 0;
+    if (_phase != RunPhase.climbing) return;
+    if (_overheated) {
+      _emit(StrikeQuality.overheat, 0, 0);
+      Feedback.weak();
+      notifyListeners();
+      return;
+    }
+    if (_hazard == HazardState.erupting) {
+      _burnStrike();
+      return;
+    }
+    _evaluateStrike(chargeMul: mul);
+  }
+
   // ── Player input ───────────────────────────────────────────────────
   void strike() {
     // First tap arms the run.
@@ -308,20 +437,45 @@ class AscentEngine extends ChangeNotifier {
 
     // Striking inside an eruption window burns the climber.
     if (_hazard == HazardState.erupting) {
-      _stability -= 1;
-      _momentum = 0;
-      _burns++;
-      _heat = (_heat + 0.22).clamp(0.0, 1.0);
-      _emit(StrikeQuality.burned, 0, 0);
-      Feedback.hazard();
-      if (_stability <= 0) {
-        _collapse();
-      } else {
-        notifyListeners();
-      }
+      _burnStrike();
       return;
     }
 
+    // Echo bonus window (echo levels): a quick second tap after a perfect.
+    if (_echoPending) {
+      _echoBonus();
+      return;
+    }
+
+    _evaluateStrike();
+  }
+
+  void _burnStrike() {
+    _stability -= 1;
+    _momentum = 0;
+    _burns++;
+    _heat = (_heat + 0.22).clamp(0.0, 1.0);
+    _emit(StrikeQuality.burned, 0, 0);
+    Feedback.hazard();
+    if (_stability <= 0) {
+      _collapse();
+    } else {
+      notifyListeners();
+    }
+  }
+
+  void _echoBonus() {
+    _echoPending = false;
+    final r = (3 * _emberMult).round();
+    _embers += r;
+    _earnedThisRun += r;
+    ProgressStore.setEmbers(_embers);
+    _emit(StrikeQuality.good, 0, r);
+    Feedback.good();
+    notifyListeners();
+  }
+
+  void _evaluateStrike({double chargeMul = 1.0}) {
     // Evaluate timing accuracy against the live (possibly moving) band.
     final d = (markerPosition - _bandCenter).abs();
     final StrikeQuality quality;
@@ -334,6 +488,10 @@ class AscentEngine extends ChangeNotifier {
       _perfectCount++;
       _perfectStreak++;
       if (_perfectStreak > _bestStreak) _bestStreak = _perfectStreak;
+      if (_hasMod(AscentMod.echo)) {
+        _echoPending = true;
+        _echoTimer = 0.55;
+      }
     } else if (d <= _peak.goodBand) {
       quality = StrikeQuality.good;
       base = _peak.ascentPerPerfect * 0.45;
@@ -348,7 +506,7 @@ class AscentEngine extends ChangeNotifier {
       _momentum = 0;
     }
 
-    final gain = base * momentumMultiplier;
+    final gain = base * momentumMultiplier * chargeMul;
     _ascent = (_ascent + gain).clamp(0.0, 1.0);
 
     _heat = (_heat + _heatPerStrike).clamp(0.0, 1.0);
@@ -356,7 +514,7 @@ class AscentEngine extends ChangeNotifier {
       _overheat();
     }
 
-    final reward = _emberReward(quality);
+    final reward = (_emberReward(quality) * chargeMul).round();
     if (reward > 0) {
       _embers += reward;
       _earnedThisRun += reward;
@@ -419,16 +577,23 @@ class AscentEngine extends ChangeNotifier {
     if (_maxCombo >= _peak.comboGoal) stars++;
     _starsEarned = stars;
 
-    final bonus = ((30 + _peak.index * 15) * _emberMult).round();
+    final lvl = _level;
+    final bonus =
+        ((30 + (lvl?.index ?? _peak.index) * 6) * _emberMult).round();
     _embers += bonus;
     _earnedThisRun += bonus;
     ProgressStore.setEmbers(_embers);
-    ProgressStore.setBestAscent(_peak.index, 100);
-    ProgressStore.setStars(_peak.index, _difficulty, stars);
-    final next = _peak.index + 1;
-    if (next > _highestPeak && next < Peaks.count) {
-      _highestPeak = next;
-      ProgressStore.setHighestPeak(next);
+    if (lvl != null) {
+      ProgressStore.setLevelStars(lvl.index, stars);
+      ProgressStore.unlockCampaignLevel(lvl.index + 1);
+    } else {
+      ProgressStore.setBestAscent(_peak.index, 100);
+      ProgressStore.setStars(_peak.index, _difficulty, stars);
+      final next = _peak.index + 1;
+      if (next > _highestPeak && next < Peaks.count) {
+        _highestPeak = next;
+        ProgressStore.setHighestPeak(next);
+      }
     }
     Feedback.summit();
     _persistRunOutcome(summited: true);
@@ -478,31 +643,25 @@ class AscentEngine extends ChangeNotifier {
 
     final allGear = GearCatalog.all.every((g) => gearTier(g.id) > 0);
     var anyTriple = false;
-    var anyAllDiff = false;
-    for (var p = 0; p < Peaks.count; p++) {
-      for (final dd in Difficulty.values) {
-        if (ProgressStore.stars(p, dd) >= 3) anyTriple = true;
-      }
-      if (Difficulty.values
-          .every((dd) => ProgressStore.stars(p, dd) > 0)) {
-        anyAllDiff = true;
-      }
+    for (var i = 0; i < Levels.count; i++) {
+      if (ProgressStore.levelStars(i) >= 3) anyTriple = true;
     }
+    final flowSolved = Levels.all
+        .where((l) => l.isFlow)
+        .any((l) => ProgressStore.isLevelCleared(l.index));
+    final cleared = ProgressStore.levelsCleared();
 
     await chk('first_summit', ProgressStore.summits >= 1);
-    await chk('conqueror_normal',
-        ProgressStore.peaksClearedOn(Difficulty.normal) >= Peaks.count);
-    await chk('conqueror_hard',
-        ProgressStore.peaksClearedOn(Difficulty.hard) >= Peaks.count);
-    await chk('inferno_climber',
-        ProgressStore.peaksClearedOn(Difficulty.inferno) >= 1);
+    await chk('reach_10', cleared >= 10);
+    await chk('reach_25', cleared >= 25);
+    await chk('reach_50', cleared >= 50);
     await chk('flawless', flawless);
     await chk('combo_master', ProgressStore.bestCombo >= 14);
     await chk('perfect_streak_10', _bestStreak >= 10);
     await chk('full_gear', allGear);
     await chk('ember_hoarder', ProgressStore.embersEarned >= 10000);
     await chk('triple_star', anyTriple);
-    await chk('all_difficulties', anyAllDiff);
+    await chk('flow_solver', flowSolved);
     await chk('veteran', ProgressStore.totalRuns >= 50);
     await chk('sharp_eye', ProgressStore.perfectStrikes >= 500);
     return newly;

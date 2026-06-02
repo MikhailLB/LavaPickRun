@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../app/routes.dart';
+import '../data/levels.dart';
 import '../data/peaks.dart';
 import '../data/progress_store.dart';
 import '../data/skins.dart';
 import '../engine/ascent_engine.dart';
-import '../engine/models.dart';
 import '../state/store.dart';
 import '../ui/painters/ember_icon.dart';
 import '../ui/theme.dart';
@@ -123,8 +123,8 @@ class _HomeScreenState extends State<HomeScreen>
                           Expanded(
                             child: _StatCard(
                               icon: Icons.star_rounded,
-                              value: '${ProgressStore.totalStars()}',
-                              suffix: '/ ${Peaks.count * 3 * 3}',
+                              value: '${ProgressStore.campaignStars()}',
+                              suffix: '/ ${Levels.count * 3}',
                               label: 'STARS',
                             ),
                           ),
@@ -132,10 +132,9 @@ class _HomeScreenState extends State<HomeScreen>
                           Expanded(
                             child: _StatCard(
                               icon: Icons.terrain,
-                              value:
-                                  '${ProgressStore.peaksClearedOn(Difficulty.normal)}',
-                              suffix: '/ ${Peaks.count}',
-                              label: 'PEAKS',
+                              value: '${ProgressStore.levelsCleared()}',
+                              suffix: '/ ${Levels.count}',
+                              label: 'LEVELS',
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -157,10 +156,10 @@ class _HomeScreenState extends State<HomeScreen>
                       child: _MenuRow(
                         icon: Icons.play_arrow_rounded,
                         title: 'CLIMB',
-                        subtitle: 'Pick a route and begin the ascent',
+                        subtitle: 'Campaign · 50 levels of trials',
                         primary: true,
                         onTap: () =>
-                            Navigator.of(context).pushNamed(Routes.peaks),
+                            Navigator.of(context).pushNamed(Routes.campaign),
                       ),
                     ),
                     const SizedBox(height: 10),

@@ -10,7 +10,11 @@ import '../ui/widgets/common.dart';
 /// its own [FlowEngine]; tapping a tile rotates it, and connecting the source
 /// to the drain clears the level.
 class FlowScreen extends StatefulWidget {
-  const FlowScreen({super.key});
+  const FlowScreen({super.key, this.campaignLevel});
+
+  /// When set, this is a campaign puzzle level: solving it clears that campaign
+  /// level and unlocks the next one, and the button returns to the map.
+  final int? campaignLevel;
 
   @override
   State<FlowScreen> createState() => _FlowScreenState();
@@ -18,20 +22,42 @@ class FlowScreen extends StatefulWidget {
 
 class _FlowScreenState extends State<FlowScreen> {
   final FlowEngine _engine = FlowEngine();
+  bool _campaignSaved = false;
+
+  bool get _isCampaign => widget.campaignLevel != null;
 
   @override
   void initState() {
     super.initState();
-    _engine.load(ProgressStore.flowLevel);
+    if (_isCampaign) {
+      // Puzzle size scales with how deep the campaign level is.
+      _engine.load((widget.campaignLevel! ~/ 10).clamp(1, 6));
+    } else {
+      _engine.load(ProgressStore.flowLevel);
+    }
+    _engine.addListener(_onFlow);
+  }
+
+  void _onFlow() {
+    if (_isCampaign && _engine.solved && !_campaignSaved) {
+      _campaignSaved = true;
+      ProgressStore.setLevelStars(widget.campaignLevel!, 3);
+      ProgressStore.unlockCampaignLevel(widget.campaignLevel! + 1);
+    }
   }
 
   @override
   void dispose() {
+    _engine.removeListener(_onFlow);
     _engine.dispose();
     super.dispose();
   }
 
   void _next() {
+    if (_isCampaign) {
+      Navigator.of(context).pop();
+      return;
+    }
     _engine.load(_engine.level + 1);
   }
 
@@ -91,7 +117,10 @@ class _FlowScreenState extends State<FlowScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('LAVA FLOW', style: AppText.display(20)),
-                Text('Level ${_engine.level + 1}',
+                Text(
+                    _isCampaign
+                        ? 'Level ${widget.campaignLevel! + 1}'
+                        : 'Practice ${_engine.level + 1}',
                     style:
                         AppText.label(11, color: Palette.ember, spacing: 1.5)),
               ],
@@ -209,7 +238,7 @@ class _FlowScreenState extends State<FlowScreen> {
                 style: AppText.body(13)),
             const SizedBox(height: 14),
             EmberButton(
-              label: 'NEXT LEVEL',
+              label: _isCampaign ? 'CONTINUE' : 'NEXT LEVEL',
               icon: Icons.arrow_forward,
               primary: true,
               onTap: _next,
