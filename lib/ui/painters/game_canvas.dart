@@ -167,35 +167,50 @@ class GameCanvasPainter extends CustomPainter {
 
     double posToY(double pos) => lerpDouble(bottom, top, pos)!;
 
-    // Good band.
-    final goodTop = posToY(
-        (AscentEngine.targetCenter + engine.goodBandView).clamp(0.0, 1.0));
-    final goodBottom = posToY(
-        (AscentEngine.targetCenter - engine.goodBandView).clamp(0.0, 1.0));
-    canvas.drawRRect(
-      RRect.fromLTRBR(
-        x - width / 2, goodTop, x + width / 2, goodBottom,
-        const Radius.circular(8)),
-      Paint()..color = Palette.ember.withValues(alpha: 0.22),
-    );
+    final center = engine.bandCenter;
 
-    // Perfect band.
-    final perfTop = posToY(
-        (AscentEngine.targetCenter + engine.perfectBandView).clamp(0.0, 1.0));
-    final perfBottom = posToY(
-        (AscentEngine.targetCenter - engine.perfectBandView).clamp(0.0, 1.0));
-    canvas.drawRRect(
-      RRect.fromLTRBR(
-        x - width / 2, perfTop, x + width / 2, perfBottom,
-        const Radius.circular(6)),
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Palette.gold, Palette.cream, Palette.gold],
-        ).createShader(Rect.fromLTRB(x - 8, perfTop, x + 8, perfBottom))
-        ..color = Palette.gold.withValues(alpha: danger ? 0.4 : 0.9),
-    );
+    // Decoy band (false target) — drawn red so it reads as a trap.
+    if (engine.hasDecoy) {
+      final dc = engine.decoyCenter;
+      final dTop = posToY((dc + engine.perfectBandView).clamp(0.0, 1.0));
+      final dBottom = posToY((dc - engine.perfectBandView).clamp(0.0, 1.0));
+      canvas.drawRRect(
+        RRect.fromLTRBR(
+            x - width / 2, dTop, x + width / 2, dBottom,
+            const Radius.circular(6)),
+        Paint()..color = Palette.danger.withValues(alpha: 0.5),
+      );
+    }
+
+    // Blackout levels hide the real band on a blink cycle.
+    if (engine.bandVisible) {
+      // Good band.
+      final goodTop = posToY((center + engine.goodBandView).clamp(0.0, 1.0));
+      final goodBottom = posToY((center - engine.goodBandView).clamp(0.0, 1.0));
+      canvas.drawRRect(
+        RRect.fromLTRBR(
+            x - width / 2, goodTop, x + width / 2, goodBottom,
+            const Radius.circular(8)),
+        Paint()..color = Palette.ember.withValues(alpha: 0.22),
+      );
+
+      // Perfect band.
+      final perfTop = posToY((center + engine.perfectBandView).clamp(0.0, 1.0));
+      final perfBottom =
+          posToY((center - engine.perfectBandView).clamp(0.0, 1.0));
+      canvas.drawRRect(
+        RRect.fromLTRBR(
+            x - width / 2, perfTop, x + width / 2, perfBottom,
+            const Radius.circular(6)),
+        Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Palette.gold, Palette.cream, Palette.gold],
+          ).createShader(Rect.fromLTRB(x - 8, perfTop, x + 8, perfBottom))
+          ..color = Palette.gold.withValues(alpha: danger ? 0.4 : 0.9),
+      );
+    }
 
     // Marker.
     final my = posToY(engine.markerPosition);

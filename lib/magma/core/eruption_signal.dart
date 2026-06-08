@@ -184,8 +184,7 @@ class EruptionSignal {
   }
 
   /// Posts the launch payload to the remote endpoint and caches the returned
-  /// destination. Returns [FlowReply.declined] when not configured so callers
-  /// fall back to the game without crashing.
+  /// destination. Returns [FlowReply.declined] when not configured.
   Future<FlowReply> dispatch(Map<String, dynamic> body) async {
     final endpoint = MagmaConfig.configEndpoint;
     if (endpoint.isEmpty) return FlowReply.declined('endpoint_missing');

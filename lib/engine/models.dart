@@ -25,6 +25,47 @@ enum HazardState {
   venting, // forced cool-down after an overheat
 }
 
+/// A per-peak gameplay twist woven into the live climb. Each one changes how
+/// the timing gauge behaves, so the seven peaks play differently rather than
+/// just being faster versions of the same thing.
+enum PeakTrial {
+  steady, // the target band sits still in the centre
+  drift, // the band slowly slides up and down the gauge
+  gust, // the marker speeds up and slows in waves
+  shift, // the band jumps to a new spot every couple of seconds
+  squall, // drift + gust combined
+  tempest, // shift + gust combined
+}
+
+extension PeakTrialX on PeakTrial {
+  String get label => switch (this) {
+        PeakTrial.steady => 'Steady',
+        PeakTrial.drift => 'Drifting Band',
+        PeakTrial.gust => 'Ember Gusts',
+        PeakTrial.shift => 'Shifting Band',
+        PeakTrial.squall => 'Squall',
+        PeakTrial.tempest => 'Tempest',
+      };
+
+  String get hint => switch (this) {
+        PeakTrial.steady => 'The gold band holds in the centre.',
+        PeakTrial.drift => 'The gold band glides up and down — track it.',
+        PeakTrial.gust => 'Gusts push the marker faster and slower.',
+        PeakTrial.shift => 'The gold band jumps to a new spot. Re-aim fast.',
+        PeakTrial.squall => 'A drifting band and shifting gusts at once.',
+        PeakTrial.tempest => 'The band leaps and gusts tear at the marker.',
+      };
+
+  bool get drifts =>
+      this == PeakTrial.drift || this == PeakTrial.squall;
+  bool get gusts =>
+      this == PeakTrial.gust ||
+      this == PeakTrial.squall ||
+      this == PeakTrial.tempest;
+  bool get shifts =>
+      this == PeakTrial.shift || this == PeakTrial.tempest;
+}
+
 /// Difficulty tiers. Each peak can be climbed on all three; harder tiers spin
 /// the gauge faster, send eruptions sooner with shorter warnings, build heat
 /// quicker and shrink the perfect band — but pay far more Embers. Hard unlocks
@@ -102,6 +143,7 @@ class Peak {
     required this.perfectBand,
     required this.goodBand,
     required this.comboGoal,
+    this.trial = PeakTrial.steady,
   });
 
   final int index;
@@ -130,6 +172,9 @@ class Peak {
 
   /// Max combo needed during a run to earn the third star.
   final int comboGoal;
+
+  /// The gameplay twist active on this peak.
+  final PeakTrial trial;
 
   int get displayNumber => index + 1;
 }

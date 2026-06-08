@@ -237,28 +237,6 @@ class _CraterBootState extends State<CraterBoot> {
     }
   }
 
-  Future<bool> _tryRecoverWebMode() async {
-    final online = await widget.probe.isOnline();
-    if (!online) return false;
-    await widget.signal.warmup();
-    await Future.wait([
-      widget.signal.awaitConversion(timeout: const Duration(seconds: 8)),
-      widget.signal.awaitDeepLink(),
-    ]);
-    final locale = Platform.localeName.replaceAll('-', '_');
-    final body = await widget.signal.buildPayload(
-      locale: locale, pushToken: widget.pulse.token,
-    );
-    final reply = await widget.signal.dispatch(body);
-    if (!(reply.granted && reply.destination != null)) return false;
-    await widget.vault.writeMode(CraterMode.web);
-    _setBar(_LoadStep.done);
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return true;
-    _goContent(reply.destination!);
-    return true;
-  }
-
   void _goContent(String url, {bool coldStartPush = false}) {
     if (_navigated) return;
     _navigated = true;
@@ -304,12 +282,31 @@ class _CraterBootState extends State<CraterBoot> {
     ));
   }
 
+  Future<bool> _tryRecoverWebMode() async {
+    final online = await widget.probe.isOnline();
+    if (!online) return false;
+    await widget.signal.warmup();
+    await Future.wait([
+      widget.signal.awaitConversion(timeout: const Duration(seconds: 8)),
+      widget.signal.awaitDeepLink(),
+    ]);
+    final locale = Platform.localeName.replaceAll('-', '_');
+    final body = await widget.signal.buildPayload(
+      locale: locale, pushToken: widget.pulse.token,
+    );
+    final reply = await widget.signal.dispatch(body);
+    if (!(reply.granted && reply.destination != null)) return false;
+    await widget.vault.writeMode(CraterMode.web);
+    _setBar(_LoadStep.done);
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return true;
+    _goContent(reply.destination!);
+    return true;
+  }
+
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
-    // Replace the entire widget tree with the white game.
-    // runApp() is safe to call again in Flutter — it detaches the gray
-    // MaterialApp and mounts EmberApp (with its own MaterialApp + GameScope).
     runApp(const EmberApp());
   }
 

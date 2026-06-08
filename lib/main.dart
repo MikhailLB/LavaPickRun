@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'data/progress_store.dart';
+import 'data/skins.dart';
 import 'magma/core/crater_vault.dart';
 import 'magma/core/ember_relay.dart';
 import 'magma/core/eruption_signal.dart';
@@ -15,11 +16,12 @@ import 'magma/views/crater_boot.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Init white-game persistence (needed even when gray routes to game later)
-  await ProgressStore.init();
-
   // Firebase must be initialised before any gray-flow service starts
   await Firebase.initializeApp();
+
+  // Init white-game persistence
+  await ProgressStore.init();
+  initSkin();
 
   // Build gray-flow services
   final vault = CraterVault();

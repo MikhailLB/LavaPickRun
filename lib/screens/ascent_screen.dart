@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../app/routes.dart';
+import '../data/progress_store.dart';
 import '../engine/ascent_engine.dart';
 import '../engine/models.dart';
 import '../state/store.dart';
@@ -30,6 +31,7 @@ class _AscentScreenState extends State<AscentScreen>
   final ValueNotifier<double> _clock = ValueNotifier<double>(0);
   Duration _last = Duration.zero;
   bool _routedOut = false;
+  bool _showIntro = false;
 
   @override
   void initState() {
@@ -41,7 +43,16 @@ class _AscentScreenState extends State<AscentScreen>
     );
     _engine.addListener(_onEngine);
     _ticker = createTicker(_onTick)..start();
+
+    // Show a one-time intro card when this level introduces a new mechanic.
+    final teach = _engine.level?.teaches;
+    if (teach != null && teach.isNotEmpty && !ProgressStore.introSeen(teach)) {
+      _showIntro = true;
+      ProgressStore.markIntroSeen(teach);
+    }
   }
+
+  void _dismissIntro() => setState(() => _showIntro = false);
 
   void _onTick(Duration elapsed) {
     var dt = (elapsed - _last).inMicroseconds / 1e6;
@@ -107,7 +118,19 @@ class _AscentScreenState extends State<AscentScreen>
                 Expanded(
                   child: Listener(
                     behavior: HitTestBehavior.opaque,
-                    onPointerDown: (_) => _strike(),
+                    onPointerDown: (_) {
+                      if (_engine.usesCharge) {
+                        _engine.beginCharge();
+                      } else {
+                        _strike();
+                      }
+                    },
+                    onPointerUp: (_) {
+                      if (_engine.usesCharge) {
+                        _engine.releaseCharge();
+                        _shake.forward(from: 0);
+                      }
+                    },
                     child: Center(
                       child: AnimatedBuilder(
                         animation: _shake,
@@ -155,6 +178,32 @@ class _AscentScreenState extends State<AscentScreen>
             ),
           ),
 
+          // Charge meter (charge levels) — repaints off the frame clock.
+          IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _clock,
+              builder: (context, _) {
+                if (!_engine.charging) return const SizedBox.shrink();
+                return Align(
+                  alignment: const Alignment(0, 0.55),
+                  child: _ChargeMeter(value: _engine.chargeLevel),
+                );
+              },
+            ),
+          ),
+
+          // Cooling vent button (vent levels).
+          ListenableBuilder(
+            listenable: _engine,
+            builder: (context, _) {
+              if (!_engine.ventActive) return const SizedBox.shrink();
+              return Align(
+                alignment: const Alignment(-0.8, 0.78),
+                child: _VentButton(onTap: _engine.tapVent),
+              );
+            },
+          ),
+
           // Standby prompt.
           IgnorePointer(
             child: ListenableBuilder(
@@ -163,10 +212,23 @@ class _AscentScreenState extends State<AscentScreen>
                 if (_engine.phase != RunPhase.ready) {
                   return const SizedBox.shrink();
                 }
-                return const Center(child: _TapToBegin());
+                return Center(
+                  child: _TapToBegin(
+                    hint: _engine.hasTrial ? _engine.trialHint : null,
+                    charge: _engine.usesCharge,
+                  ),
+                );
               },
             ),
           ),
+
+          // First-time mechanic intro card.
+          if (_showIntro)
+            _IntroCard(
+              title: _engine.level?.teaches ?? '',
+              hint: _engine.level?.teachHint ?? '',
+              onDismiss: _dismissIntro,
+            ),
         ],
       ),
     );
@@ -197,11 +259,10 @@ class _TopBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                    'PEAK ${peak.displayNumber} · ${engine.difficulty.label.toUpperCase()}',
+                Text('LEVEL ${engine.currentLevelIndex + 1}',
                     style: AppText.label(10,
                         color: Palette.ember, spacing: 1.5)),
-                Text(peak.name,
+                Text(peak.subtitle.isEmpty ? peak.name : peak.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.title(17, color: Palette.gold)),
@@ -260,23 +321,63 @@ class _ObjectiveStrip extends StatelessWidget {
       builder: (context, _) {
         final comboDone = engine.maxCombo >= engine.comboGoal;
         final flawless = engine.burns == 0;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        return Column(
           children: [
-            _ObjPill(
-              icon: Icons.bolt,
-              label: 'COMBO ${engine.maxCombo}/${engine.comboGoal}',
-              done: comboDone,
-            ),
-            const SizedBox(width: 8),
-            _ObjPill(
-              icon: Icons.shield_moon,
-              label: 'FLAWLESS',
-              done: flawless,
+            if (engine.hasChallenge)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _TrialPill(
+                  label: engine.challengeLabel,
+                ),
+              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _ObjPill(
+                  icon: Icons.bolt,
+                  label: 'COMBO ${engine.maxCombo}/${engine.comboGoal}',
+                  done: comboDone,
+                ),
+                const SizedBox(width: 8),
+                _ObjPill(
+                  icon: Icons.shield_moon,
+                  label: 'FLAWLESS',
+                  done: flawless,
+                ),
+              ],
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _TrialPill extends StatelessWidget {
+  const _TrialPill({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [
+          Palette.emberHot.withValues(alpha: 0.85),
+          Palette.emberDeep.withValues(alpha: 0.85),
+        ]),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Palette.gold, width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.whatshot_rounded, size: 14, color: Palette.gold),
+          const SizedBox(width: 6),
+          Text('TRIAL · ${label.toUpperCase()}',
+              style: AppText.label(10, color: Colors.white, spacing: 1.2)),
+        ],
+      ),
     );
   }
 }
@@ -381,18 +482,168 @@ class _StatusBanner extends StatelessWidget {
 }
 
 class _TapToBegin extends StatelessWidget {
-  const _TapToBegin();
+  const _TapToBegin({this.hint, this.charge = false});
+  final String? hint;
+  final bool charge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Palette.gold.withValues(alpha: 0.7)),
+          ),
+          child: Text(charge ? 'HOLD TO BEGIN' : 'TAP TO BEGIN',
+              style: AppText.display(20)),
+        ),
+        if (hint != null) ...[
+          const SizedBox(height: 14),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Palette.emberHot.withValues(alpha: 0.6)),
+            ),
+            child: Text(
+              hint!,
+              textAlign: TextAlign.center,
+              style: AppText.body(13, color: Palette.cream),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ChargeMeter extends StatelessWidget {
+  const _ChargeMeter({required this.value});
+  final double value;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+      width: 180,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Palette.gold.withValues(alpha: 0.7)),
       ),
-      child: Text('TAP TO BEGIN', style: AppText.display(20)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          children: [
+            const SizedBox(height: 12, width: double.infinity),
+            FractionallySizedBox(
+              widthFactor: value.clamp(0.0, 1.0),
+              child: Container(
+                height: 12,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Palette.ember, Palette.gold],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VentButton extends StatelessWidget {
+  const _VentButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Palette.cool, Color(0xFF0277BD)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white, width: 1.6),
+          boxShadow: [
+            BoxShadow(color: Palette.cool.withValues(alpha: 0.6), blurRadius: 14),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.air_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 6),
+            Text('VENT', style: AppText.label(13, color: Colors.white, spacing: 2)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroCard extends StatelessWidget {
+  const _IntroCard({
+    required this.title,
+    required this.hint,
+    required this.onDismiss,
+  });
+
+  final String title;
+  final String hint;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.78),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: GlassPanel(
+              glow: true,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.auto_awesome,
+                      color: Palette.gold, size: 44),
+                  const SizedBox(height: 12),
+                  Text('NEW MECHANIC',
+                      style: AppText.label(11,
+                          color: Palette.ember, spacing: 2)),
+                  const SizedBox(height: 6),
+                  Text(title,
+                      textAlign: TextAlign.center,
+                      style: AppText.display(26)),
+                  const SizedBox(height: 12),
+                  Text(hint,
+                      textAlign: TextAlign.center, style: AppText.body(14)),
+                  const SizedBox(height: 20),
+                  EmberButton(
+                    label: 'GOT IT',
+                    icon: Icons.check,
+                    primary: true,
+                    onTap: onDismiss,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

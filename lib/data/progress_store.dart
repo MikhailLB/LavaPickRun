@@ -18,6 +18,33 @@ class ProgressStore {
   static const _kBestPrefix = 'ea.best.';
   static const _kStarPrefix = 'ea.stars.';
 
+  // ── Lifetime stats ──────────────────────────────────────────────────
+  static const _kTotalRuns = 'ea.stat.runs';
+  static const _kTotalStrikes = 'ea.stat.strikes';
+  static const _kPerfectStrikes = 'ea.stat.perfect';
+  static const _kGoodStrikes = 'ea.stat.good';
+  static const _kWeakStrikes = 'ea.stat.weak';
+  static const _kEmbersEarned = 'ea.stat.embers_earned';
+  static const _kBestCombo = 'ea.stat.best_combo';
+  static const _kSummits = 'ea.stat.summits';
+
+  // ── Achievements / Codex (unlocked id sets) ─────────────────────────
+  static const _kAchievements = 'ea.achievements';
+  static const _kCodex = 'ea.codex';
+
+  // ── Customization / onboarding ──────────────────────────────────────
+  static const _kTheme = 'ea.theme';
+  static const _kTutorialSeen = 'ea.tutorial_seen';
+
+  // ── Lava Flow (standalone practice) ─────────────────────────────────
+  static const _kFlowLevel = 'ea.flow.level';
+  static const _kFlowBest = 'ea.flow.best_moves.';
+
+  // ── Campaign (single 50-level ladder) ───────────────────────────────
+  static const _kCampaignUnlocked = 'ea.campaign.unlocked';
+  static const _kLevelStarPrefix = 'ea.lvlstar.';
+  static const _kIntros = 'ea.intros';
+
   static SharedPreferences? _prefs;
 
   static Future<void> init() async {
@@ -104,6 +131,134 @@ class ProgressStore {
   // ── Settings ────────────────────────────────────────────────────────
   static bool get hapticsEnabled => _p.getBool(_kHaptics) ?? true;
   static Future<void> setHaptics(bool value) => _p.setBool(_kHaptics, value);
+
+  static bool get soundEnabled => _p.getBool('ea.sound') ?? true;
+  static Future<void> setSound(bool value) => _p.setBool('ea.sound', value);
+
+  // ── Lifetime stats ──────────────────────────────────────────────────
+  static int get totalRuns => _p.getInt(_kTotalRuns) ?? 0;
+  static int get totalStrikes => _p.getInt(_kTotalStrikes) ?? 0;
+  static int get perfectStrikes => _p.getInt(_kPerfectStrikes) ?? 0;
+  static int get goodStrikes => _p.getInt(_kGoodStrikes) ?? 0;
+  static int get weakStrikes => _p.getInt(_kWeakStrikes) ?? 0;
+  static int get embersEarned => _p.getInt(_kEmbersEarned) ?? 0;
+  static int get bestCombo => _p.getInt(_kBestCombo) ?? 0;
+  static int get summits => _p.getInt(_kSummits) ?? 0;
+
+  /// Folds the per-run tally into the lifetime counters in one call.
+  static Future<void> recordRun({
+    required int perfect,
+    required int good,
+    required int weak,
+    required int embersEarned,
+    required int bestCombo,
+    required bool summited,
+  }) async {
+    await _p.setInt(_kTotalRuns, totalRuns + 1);
+    await _p.setInt(_kPerfectStrikes, perfectStrikes + perfect);
+    await _p.setInt(_kGoodStrikes, goodStrikes + good);
+    await _p.setInt(_kWeakStrikes, weakStrikes + weak);
+    await _p.setInt(_kTotalStrikes, totalStrikes + perfect + good + weak);
+    await _p.setInt(_kEmbersEarned, ProgressStore.embersEarned + embersEarned);
+    if (bestCombo > ProgressStore.bestCombo) {
+      await _p.setInt(_kBestCombo, bestCombo);
+    }
+    if (summited) await _p.setInt(_kSummits, summits + 1);
+  }
+
+  // ── Achievements ────────────────────────────────────────────────────
+  static Set<String> unlockedAchievements() =>
+      (_p.getStringList(_kAchievements) ?? const []).toSet();
+
+  static bool isAchievementUnlocked(String id) =>
+      unlockedAchievements().contains(id);
+
+  /// Unlocks an achievement; returns true only the first time.
+  static Future<bool> unlockAchievement(String id) async {
+    final set = unlockedAchievements();
+    if (set.contains(id)) return false;
+    set.add(id);
+    await _p.setStringList(_kAchievements, set.toList());
+    return true;
+  }
+
+  // ── Codex ───────────────────────────────────────────────────────────
+  static Set<String> unlockedCodex() =>
+      (_p.getStringList(_kCodex) ?? const []).toSet();
+
+  static bool isCodexUnlocked(String id) => unlockedCodex().contains(id);
+
+  static Future<void> unlockCodex(String id) async {
+    final set = unlockedCodex();
+    if (set.add(id)) {
+      await _p.setStringList(_kCodex, set.toList());
+    }
+  }
+
+  // ── Theme / customization ───────────────────────────────────────────
+  static String get themeId => _p.getString(_kTheme) ?? 'ember';
+  static Future<void> setThemeId(String id) => _p.setString(_kTheme, id);
+
+  // ── Onboarding ──────────────────────────────────────────────────────
+  static bool get tutorialSeen => _p.getBool(_kTutorialSeen) ?? false;
+  static Future<void> setTutorialSeen() => _p.setBool(_kTutorialSeen, true);
+
+  // ── Lava Flow ───────────────────────────────────────────────────────
+  static int get flowLevel => _p.getInt(_kFlowLevel) ?? 0;
+  static Future<void> setFlowLevel(int level) {
+    if (level <= flowLevel) return Future.value();
+    return _p.setInt(_kFlowLevel, level);
+  }
+
+  static int flowBestMoves(int level) => _p.getInt('$_kFlowBest$level') ?? 0;
+  static Future<void> setFlowBestMoves(int level, int moves) {
+    final cur = flowBestMoves(level);
+    if (cur != 0 && moves >= cur) return Future.value();
+    return _p.setInt('$_kFlowBest$level', moves);
+  }
+
+  // ── Campaign progression ────────────────────────────────────────────
+  /// Highest unlocked campaign level index (0 = only the first is playable).
+  static int get campaignUnlocked => _p.getInt(_kCampaignUnlocked) ?? 0;
+  static Future<void> unlockCampaignLevel(int index) {
+    if (index <= campaignUnlocked) return Future.value();
+    return _p.setInt(_kCampaignUnlocked, index);
+  }
+
+  static int levelStars(int index) =>
+      _p.getInt('$_kLevelStarPrefix$index') ?? 0;
+  static Future<void> setLevelStars(int index, int stars) {
+    if (stars <= levelStars(index)) return Future.value();
+    return _p.setInt('$_kLevelStarPrefix$index', stars.clamp(0, 3));
+  }
+
+  static bool isLevelCleared(int index) => levelStars(index) > 0;
+
+  static int campaignStars() {
+    var sum = 0;
+    for (var i = 0; i < 50; i++) {
+      sum += levelStars(i);
+    }
+    return sum;
+  }
+
+  static int levelsCleared() {
+    var n = 0;
+    for (var i = 0; i < 50; i++) {
+      if (levelStars(i) > 0) n++;
+    }
+    return n;
+  }
+
+  // ── One-time mechanic intros ────────────────────────────────────────
+  static bool introSeen(String label) =>
+      (_p.getStringList(_kIntros) ?? const []).contains(label);
+  static Future<void> markIntroSeen(String label) async {
+    final set = (_p.getStringList(_kIntros) ?? const []).toSet();
+    if (set.add(label)) {
+      await _p.setStringList(_kIntros, set.toList());
+    }
+  }
 
   static Future<void> wipe() => _p.clear();
 }

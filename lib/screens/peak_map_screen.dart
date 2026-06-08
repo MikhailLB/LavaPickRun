@@ -388,6 +388,23 @@ class _NodeCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppText.title(14)),
+                          if (peak.trial != PeakTrial.steady) ...[
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                const Icon(Icons.whatshot_rounded,
+                                    size: 10, color: Palette.gold),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(peak.trial.label.toUpperCase(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppText.label(8,
+                                          color: Palette.gold, spacing: 0.8)),
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           if (unlocked)
                             StarRow(stars: stars, size: 15)

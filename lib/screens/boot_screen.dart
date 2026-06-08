@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 import '../app/routes.dart';
+import '../data/progress_store.dart';
 
 /// Animated splash/boot screen. Plays the orientation-appropriate loading clip
 /// while a four-stage progress bar fills, then hands off to the home screen.
@@ -24,10 +25,10 @@ class _BootScreenState extends State<BootScreen> {
   int _initGeneration = 0;
 
   static const List<String> _barAssets = [
-    'assets/ascent_boot/gauge_0.webp',
-    'assets/ascent_boot/gauge_1.webp',
-    'assets/ascent_boot/gauge_2.webp',
-    'assets/ascent_boot/gauge_3.webp',
+    'assets/Loading/Loading_Bar_Empty.webp',
+    'assets/Loading/Loading_Bar_Half.webp',
+    'assets/Loading/Loading_Bar_Almost.webp',
+    'assets/Loading/Loading_Bar_Full.webp',
   ];
 
   final List<Timer> _timers = [];
@@ -56,8 +57,8 @@ class _BootScreenState extends State<BootScreen> {
     if (mounted && !_disposed) setState(() => _videoReady = false);
 
     final asset = orientation == Orientation.portrait
-        ? 'assets/ascent_boot/boot_portrait.mp4'
-        : 'assets/ascent_boot/boot_landscape.mp4';
+        ? 'assets/Loading/Vertical_Loading_Screen.mp4'
+        : 'assets/Loading/Horizontal_Loading_Screen.mp4';
     final controller = VideoPlayerController.asset(asset);
 
     try {
@@ -108,9 +109,10 @@ class _BootScreenState extends State<BootScreen> {
     _controller?.pause();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     Future.delayed(const Duration(milliseconds: 120), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(Routes.home);
-      }
+      if (!mounted) return;
+      // First launch: show the tutorial before the menu.
+      final next = ProgressStore.tutorialSeen ? Routes.home : Routes.tutorial;
+      Navigator.of(context).pushReplacementNamed(next);
     });
   }
 
